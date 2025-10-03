@@ -1,18 +1,6 @@
-# Analyseur d'images YOLOv8 + PyTorch + Multi-Datasets
+# Analyseur d'images et vidéos YOLOv8 + PyTorch + Multi-Datasets
 
-Ce projet analyse des images en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter, classifier et segmenter les objets selon les classes disponibles dans chaque dataset.
-
-## 📋 Table des matières
-
-1. [Installation](#installation)
-2. [Pourquoi un environnement virtuel ?](#pourquoi-un-environnement-virtuel)
-3. [Utilisation](#utilisation)
-4. [Datasets supportés](#datasets-supportés)
-5. [Tâches disponibles](#tâches-disponibles)
-6. [Comment fonctionne YOLO ?](#comment-fonctionne-yolo)
-7. [Structure du projet](#structure-du-projet)
-8. [Résultats d'analyse](#résultats-danalyse)
-9. [Comparaison des datasets](#comparaison-des-datasets)
+Ce projet analyse des images et vidéos en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter, classifier et segmenter les objets selon les classes disponibles dans chaque dataset.
 
 ## 🚀 Installation
 
@@ -92,30 +80,53 @@ source venv/bin/activate
 - Le prompt affiche `(venv)` au début
 - `which python` pointe vers le dossier `venv/bin/python`
 
-## 🎯 Utilisation
+
+## 📸 Analyse d'images
 
 ### Analyser une image avec différents datasets
 
 ```bash
-# 1. Activer l'environnement virtuel
-source venv/bin/activate
-
-# 2. Lancer l'analyse
+# Lancer l'analyse d'image
 python analyze_image.py
 ```
 
-### Ce que fait le script
+### Ce que fait le script d'analyse d'images
 
 1. **📊 Affiche les informations** sur le dataset sélectionné
 2. **📥 Charge l'image** spécifiée
 3. **🤖 Charge le modèle** YOLOv8 pré-entraîné (avec cache pour éviter les rechargements)
 4. **🔍 Analyse l'image** avec PyTorch et YOLOv8 selon les classes du dataset
 5. **📊 Affiche les résultats** : objets détectés + ID + confiance + position
-6. **🖼️ Crée une visualisation** avec des boîtes de détection et masques de segmentation 
+6. **🖼️ Crée une visualisation** avec des boîtes de détection et contours de segmentation
 
-### Configuration des datasets
+## 🎬 Analyse de vidéos
 
-Dans `analyze_image.py`, vous pouvez choisir le dataset à utiliser :
+### Analyser une vidéo en temps réel
+
+```bash
+# Lancer l'analyse de vidéo
+python analyze_video.py
+```
+
+### Ce que fait le script d'analyse de vidéos
+
+1. **📊 Affiche les informations** sur le dataset sélectionné
+2. **📥 Charge la vidéo** spécifiée
+3. **🤖 Charge le modèle** YOLOv8 pré-entraîné (avec cache pour éviter les rechargements)
+4. **🔍 Analyse chaque frame** avec PyTorch et YOLOv8 selon les classes du dataset
+5. **📊 Affiche les statistiques** : frames traitées, détections totales, FPS de traitement
+6. **🖼️ Affiche la vidéo en temps réel** avec des boîtes de détection et contours de segmentation
+7. **⌨️ Contrôles** : Appuyez sur 'q' pour quitter l'analyse
+
+### Fonctionnalités spéciales pour les vidéos
+
+- **🎥 Affichage en temps réel** : Visualisation frame par frame avec annotations
+- **📊 Statistiques en direct** : Compteur de frames, détections par frame
+- **🖥️ Redimensionnement automatique** : Adaptation à la taille d'écran (max 2560x1440)
+
+## ⚙️ Configuration des datasets
+
+Dans `analyze_image.py` et `analyze_video.py`, vous pouvez choisir le dataset à utiliser :
 
 ```python
 # Exemples de modèles pour différents datasets :
@@ -146,7 +157,6 @@ model_paths = {
 dataset_choice = 'm-seg'  # Segmentation COCO Medium
 ```
 
-## 📊 Datasets supportés
 
 ### 🎯 Dataset COCO (Common Objects in Context)
 
@@ -252,88 +262,17 @@ yolov8_object_detection/
 ├── venv/                    # Environnement virtuel Python
 ├── requirements.txt         # Dépendances Python
 ├── install.sh               # Script d'installation automatique
-├── analyze_image.py         # Script principal d'analyse multi-datasets
-├── votre_image.jpg          # Image de test
-└──README.md                 # Ce fichier
+├── analyze_image.py         # Script d'analyse d'images multi-datasets
+├── analyze_video.py         # Script d'analyse de vidéos multi-datasets
+├── test.jpg                 # Image de test
+├── test.mp4                 # Vidéo de test (à ajouter)
+└── README.md                # Ce fichier
 
 ```
 
 **Fichiers générés automatiquement :**
 - `venv/` - Environnement virtuel créé lors de l'installation
 - `yolov8*.pt` - Modèles YOLOv8 téléchargés automatiquement (~50-200MB chacun)
-
-### Visualisation
-
-Le script génère une **image annotée** avec :
-- **Boîtes de détection** colorées autour des objets
-- **Masques de segmentation** semi-transparents (modèles -seg)
-- **Labels** avec nom de classe et confiance
-
-## 🔧 Personnalisation
-
-### Changer le dataset et la taille du modèle
-
-Modifiez les lignes dans `analyze_image.py` :
-
-```python
-# Dataset COCO - Détection
-dataset_choice = 'n-coco'  # Nano (plus rapide)
-dataset_choice = 's-coco'  # Small
-dataset_choice = 'm-coco'  # Medium (recommandé)
-dataset_choice = 'l-coco'  # Large (plus précis)
-dataset_choice = 'x-coco'  # XLarge (très précis)
-
-# Dataset COCO - Segmentation
-dataset_choice = 'n-seg'   # Nano (plus rapide)
-dataset_choice = 's-seg'   # Small
-dataset_choice = 'm-seg'   # Medium (recommandé)
-dataset_choice = 'l-seg'   # Large (plus précis)
-dataset_choice = 'x-seg'   # XLarge (très précis)
-
-# Dataset Open Images V7 - Détection uniquement
-dataset_choice = 'n-oiv7'  # Nano
-dataset_choice = 'm-oiv7'  # Medium (recommandé)
-dataset_choice = 'x-oiv7'  # XLarge (très précis)
-```
-
-### Analyser une autre image
-
-Modifiez la ligne dans `analyze_image.py` :
-
-```python
-image_path = "votre_image.jpg"  # Changez ici
-```
-
-## 📊 Comparaison des datasets
-
-### Quand utiliser COCO ?
-
-✅ **Utilisez COCO si :**
-- Vous voulez détecter des objets généraux (personnes, voitures, animaux courants)
-- Vous avez besoin de la meilleure précision possible
-- Vous travaillez sur des applications grand public
-- Vous voulez des résultats rapides et fiables
-- **Vous avez besoin de segmentation** (masques de pixels)
-
-### Quand utiliser Open Images V7 ?
-
-✅ **Utilisez Open Images V7 si :**
-- Vous avez besoin de classes très spécifiques (types de chiens, modèles de voitures)
-- Vous travaillez sur des domaines spécialisés
-- Vous avez besoin de détecter des objets rares
-- Vous pouvez accepter une précision légèrement moindre
-- **Vous n'avez besoin que de détection** (pas de segmentation)
-
-### Comparaison des performances
-
-| Critère | COCO (80 classes) | Open Images V7 (600 classes) |
-|---------|-------------------|------------------------------|
-| **Précision générale** | +++++ | +++ |
-| **Vitesse** | +++++ | ++++ |
-| **Classes spécialisées** | ++ | +++++ |
-| **Facilité d'utilisation** | +++++ | +++ |
-| **Taille du modèle** | +++++ | +++ |
-| **Segmentation** | ✅ | ❌ |
 
 
 ## 📖 Ressources supplémentaires

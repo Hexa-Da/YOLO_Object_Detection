@@ -172,9 +172,6 @@ def analyze_image(image_path, model_path, seuil_conf):
         # Afficher d'abord les masques s'ils existent
         if result.masks is not None:
             
-            # Créer un masque combiné pour accélérer l'affichage
-            combined_mask = np.zeros((image_rgb.shape[0], image_rgb.shape[1], 4))
-            
             for i, mask in enumerate(result.masks):
                 # Convertir le masque en numpy array
                 mask_array = mask.data[0].cpu().numpy()
@@ -183,19 +180,46 @@ def analyze_image(image_path, model_path, seuil_conf):
                 mask_resized = cv2.resize(mask_array.astype(np.uint8), 
                                         (image_rgb.shape[1], image_rgb.shape[0]))
                 
-                # Créer un masque coloré avec transparence
-                color = colors[i % len(colors)]
-                colored_mask = np.zeros((*mask_resized.shape, 4))
-                colored_mask[mask_resized == 1] = (*color[:3], 0.6)
+                # Dessiner uniquement les contours du masque
+                contours, _ = cv2.findContours(mask_resized, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 
-                # Combiner les masques
-                combined_mask = np.maximum(combined_mask, colored_mask)
-            
-            # Afficher le masque combiné en une seule fois
-            ax.imshow(combined_mask)
+                # Convertir les contours pour matplotlib
+                for contour in contours:
+                    # Convertir les coordonnées OpenCV vers matplotlib
+                    contour_points = contour.reshape(-1, 2)
+                    
+                    # Dessiner le contour
+                    color = colors[i % len(colors)]
+                    ax.plot(contour_points[:, 0], contour_points[:, 1], 
+                           color=color, linewidth=3, alpha=0.8)
+                
+                # Calculer le centre du masque pour placer le label
+                if len(contours) > 0:
+                    # Utiliser le plus grand contour
+                    largest_contour = max(contours, key=cv2.contourArea)
+                    M = cv2.moments(largest_contour)
+                    if M["m00"] != 0:
+                        cx = int(M["m10"] / M["m00"])
+                        cy = int(M["m01"] / M["m00"])
+                        
+                        # Obtenir les informations de la boîte correspondante
+                        if result.boxes is not None and i < len(result.boxes):
+                            box = result.boxes[i]
+                            confidence = box.conf[0].cpu().numpy()
+                            class_id = int(box.cls[0].cpu().numpy())
+                            class_name = result.names[class_id]
+                            
+                            # Ajouter le label au centre
+                            color = colors[i % len(colors)]
+                            ax.text(
+                                cx, cy, f"{class_name} {confidence:.2%}",
+                                fontsize=10, fontweight='bold',
+                                bbox=dict(boxstyle="round,pad=0.3", facecolor=color, alpha=0.7),
+                                color='white', ha='center', va='center'
+                            )
         
-        # Ensuite afficher les boîtes et labels
-        if result.boxes is not None:
+        # Ensuite afficher les boîtes et labels (seulement pour les modèles sans segmentation)
+        if result.boxes is not None and result.masks is None:
             for i, box in enumerate(result.boxes):
                 # Coordonnées de la boîte
                 x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
