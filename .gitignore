@@ -4,6 +4,12 @@ yolov8n.pt
 yolov8s.pt
 yolov8x.pt
 
+yolov8l-oiv7.pt
+yolov8m-oiv7.pt
+yolov8n-oiv7.pt
+yolov8s-oiv7.pt
+yolov8x-oiv7.pt
+
 __pycache__/
 *.pyc
 *.pyo

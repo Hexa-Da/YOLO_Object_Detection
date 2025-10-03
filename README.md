@@ -1,16 +1,17 @@
-# 🔍 Analyseur d'images YOLOv8 + PyTorch + Dataset COCO
+# 🔍 Analyseur d'images YOLOv8 + PyTorch + Multi-Datasets
 
-Ce projet analyse l'image `votre_image.jpg` en utilisant YOLOv8 pré-entraîné sur le dataset COCO avec PyTorch pour détecter et identifier les objets selon les 80 classes du dataset COCO.
+Ce projet analyse des images en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter et identifier les objets selon les classes disponibles dans chaque dataset.
 
 ## 📋 Table des matières
 
 1. [Installation](#installation)
 2. [Pourquoi un environnement virtuel ?](#pourquoi-un-environnement-virtuel)
 3. [Utilisation](#utilisation)
-4. [Dataset COCO](#dataset-coco)
+4. [Datasets supportés](#datasets-supportés)
 5. [Comment fonctionne YOLO ?](#comment-fonctionne-yolo)
 6. [Structure du projet](#structure-du-projet)
 7. [Résultats d'analyse](#résultats-danalyse)
+8. [Comparaison des datasets](#comparaison-des-datasets)
 
 ## 🚀 Installation
 
@@ -59,7 +60,6 @@ pip install -r requirements.txt
 - `matplotlib>=3.3.0` - Visualisation
 - `numpy>=1.21.0` - Calculs numériques
 
-
 ## 🤔 Pourquoi un environnement virtuel ?
 
 ### Le problème sur macOS avec Homebrew
@@ -78,7 +78,6 @@ error: externally-managed-environment
 4. **🧹 Propreté** : Facile à supprimer si besoin
 5. **⚡ Performance** : Évite les conflits de versions
 
-
 ### Activation de l'environnement virtuel
 
 **Important :** Vous devez activer l'environnement virtuel à chaque nouvelle session terminal :
@@ -92,10 +91,9 @@ source venv/bin/activate
 - Le prompt affiche `(venv)` au début
 - `which python` pointe vers le dossier `venv/bin/python`
 
-
 ## 🎯 Utilisation
 
-### Analyser l'image example.jpg
+### Analyser une image avec différents datasets
 
 ```bash
 # 1. Activer l'environnement virtuel
@@ -107,68 +105,91 @@ python analyze_image.py
 
 ### Ce que fait le script
 
-1. **📊 Affiche les informations** sur le dataset COCO (80 classes, 1.5M objets)
-2. **📥 Charge l'image** `votre_image.jpg`
-3. **🤖 Télécharge le modèle** YOLOv8 pré-entraîné sur COCO (yolov8m.pt - ~50MB)
-4. **🔍 Analyse l'image** avec PyTorch et YOLOv8 selon les classes COCO
-5. **📊 Affiche les résultats** : objets détectés + ID COCO + confiance + position
+1. **📊 Affiche les informations** sur le dataset sélectionné
+2. **📥 Charge l'image** spécifiée
+3. **🤖 Charge le modèle** YOLOv8 pré-entraîné (avec cache pour éviter les rechargements)
+4. **🔍 Analyse l'image** avec PyTorch et YOLOv8 selon les classes du dataset
+5. **📊 Affiche les résultats** : objets détectés + ID + confiance + position
 6. **🖼️ Crée une visualisation** avec des boîtes de détection colorées
 
+### Configuration des datasets
 
-## 📊 Dataset COCO
+Dans `analyze_image.py`, vous pouvez choisir le dataset à utiliser :
 
-### Qu'est-ce que le dataset COCO ?
+```python
+# Exemples de modèles pour différents datasets :
+model_paths = {
+    'n-coco': "yolov8n.pt",           # COCO Nano (80 classes)
+    's-coco': "yolov8s.pt",           # COCO Small (80 classes)
+    'm-coco': "yolov8m.pt",           # COCO Medium (80 classes)
+    'l-coco': "yolov8l.pt",           # COCO Large (80 classes)
+    'x-coco': "yolov8x.pt",           # COCO XLarge (80 classes)
+    'n-oiv7': "yolov8n-oiv7.pt",      # Open Images V7 Nano (600 classes)
+    's-oiv7': "yolov8s-oiv7.pt",      # Open Images V7 Small (600 classes)
+    'm-oiv7': "yolov8m-oiv7.pt",      # Open Images V7 Medium (600 classes)
+    'l-oiv7': "yolov8l-oiv7.pt",      # Open Images V7 Large (600 classes)
+    'x-oiv7': "yolov8x-oiv7.pt",      # Open Images V7 XLarge (600 classes)
+}
 
-**COCO** (Common Objects in Context) est l'un des datasets de référence pour la détection d'objets, la segmentation et la génération de légendes d'images.
+# Choisir le dataset à utiliser
+dataset_choice = 'm-coco'  # Changez ici pour tester différents datasets
+```
 
-### Caractéristiques du dataset COCO
+## 📊 Datasets supportés
 
-- **🔢 80 classes d'objets** différentes
+### 🎯 Dataset COCO (Common Objects in Context)
+
+**Le plus populaire et performant pour la détection d'objets généraux**
+
+#### Caractéristiques
+- **🔢 80 classes d'objets** 
 - **📈 118,287 images d'entraînement**
 - **📈 5,000 images de validation**
 - **📈 40,670 images de test**
 - **🎯 1.5 million d'objets annotés**
 - **🌐 Site officiel** : https://cocodataset.org/
 
-### Classes détectables par le modèle
+### 🌐 Dataset Open Images V7
 
-Le modèle YOLOv8 pré-entraîné peut détecter ces **80 classes** :
+**Dataset très large avec de nombreuses classes spécialisées**
 
-#### 👥 Personnes
-- `person` (ID: 0)
+#### Caractéristiques
+- **🔢 600 classes d'objets** très variées
+- **📈 Plus de 9 millions d'images**
+- **🎯 Plus de 36 millions de boîtes de détection**
+- **🌐 Site officiel** : https://storage.googleapis.com/openimages/web/index.html
 
-#### 🚗 Véhicules
-- `bicycle` (ID: 1), `car` (ID: 2), `motorcycle` (ID: 3), `airplane` (ID: 4)
-- `bus` (ID: 5), `train` (ID: 6), `truck` (ID: 7), `boat` (ID: 8)
+#### Avantages
+- **🎯 Classes très spécifiques** : Différents types de chiens, voitures, etc.
+- **🌍 Diversité** : Couvre de nombreux domaines spécialisés
+- **📊 Échelle** : Dataset très large
 
-#### 🐕 Animaux
-- `bird` (ID: 14), `cat` (ID: 15), `dog` (ID: 16), `horse` (ID: 17)
-- `sheep` (ID: 18), `cow` (ID: 19), `elephant` (ID: 20), `bear` (ID: 21)
-- `zebra` (ID: 22), `giraffe` (ID: 23)
+#### Inconvénients
+- **⚠️ Précision moindre** : Moins performant que COCO sur les objets généraux
+- **📊 Classes déséquilibrées** : Certaines classes très rares
+- **🔍 Complexité** : Plus difficile à utiliser efficacement
 
-#### 🏠 Objets du quotidien
-- `chair` (ID: 56), `couch` (ID: 57), `potted plant` (ID: 58), `bed` (ID: 59)
-- `dining table` (ID: 60), `toilet` (ID: 61), `tv` (ID: 62), `laptop` (ID: 63)
-- `mouse` (ID: 64), `remote` (ID: 65), `keyboard` (ID: 66), `cell phone` (ID: 67)
+### 🔄 Système de cache intelligent
 
-#### 🍎 Nourriture
-- `banana` (ID: 46), `apple` (ID: 47), `sandwich` (ID: 48), `orange` (ID: 49)
-- `broccoli` (ID: 50), `carrot` (ID: 51), `hot dog` (ID: 52), `pizza` (ID: 53)
-- `donut` (ID: 54), `cake` (ID: 55)
+Le script utilise un **système de cache global** pour éviter de recharger les modèles :
 
-#### ⚽ Sports et loisirs
-- `sports ball` (ID: 32), `kite` (ID: 33), `baseball bat` (ID: 34)
-- `baseball glove` (ID: 35), `skateboard` (ID: 36), `surfboard` (ID: 37)
-- `tennis racket` (ID: 38)
+```python
+# Cache global pour les modèles chargés
+_model_cache = {}
 
-### Pourquoi utiliser COCO ?
-
-1. **🎯 Standard de référence** : Utilisé par la communauté scientifique
-2. **📊 Diversité** : Couvre de nombreux domaines d'application
-3. **🔍 Qualité** : Annotations précises et vérifiées
-4. **🌍 Échelle** : Plus de 1.5 million d'objets annotés
-5. **🔄 Mise à jour** : Dataset régulièrement mis à jour
-
+def get_model(model_path):
+    """
+    Récupère un modèle depuis le cache ou le charge s'il n'existe pas
+    """
+    if model_path not in _model_cache:
+        print(f"🔄 Chargement du modèle {model_path}...")
+        _model_cache[model_path] = YOLO(model_path)
+        print(f"✅ Modèle {model_path} chargé avec succès")
+    else:
+        print(f"♻️  Utilisation du modèle {model_path} depuis le cache")
+    
+    return _model_cache[model_path]
+```
 
 ## 🧠 Comment fonctionne YOLO ?
 
@@ -198,30 +219,19 @@ Image (640x640) → Backbone → Neck → Head → Détections
 3. **🎯 Prédiction** : Pour chaque zone, prédit :
    - **Position** : Coordonnées de la boîte (x1, y1, x2, y2)
    - **Confiance** : Probabilité que ce soit un objet (0-1)
-   - **Classe** : Type d'objet (person, car, dog, etc.)
+   - **Classe** : Type d'objet selon le dataset utilisé
 4. **🔍 Filtrage** : Garde seulement les détections avec confiance > seuil
 5. **📊 Résultat** : Liste des objets détectés avec leurs propriétés
 
 ### Modèles YOLOv8 disponibles
 
-| Taille | Fichier | Vitesse | Précision | Usage |
-|--------|---------|---------|-----------|-------|
-| Nano   | yolov8n.pt | +++ | ++ | Mobile, IoT |
-| Small  | yolov8s.pt | ++ | +++ | Équilibre |
-| **Medium** | **yolov8m.pt** | + | ++++ | **Recommandé** |
-| Large  | yolov8l.pt | - | +++++ | Haute précision |
-| Huge   | yolov8x.pt | -- | +++++ | Recherche |
-
-### Classes détectables
-
-Le modèle pré-entraîné peut détecter **80 classes** du dataset COCO (voir section [Dataset COCO](#dataset-coco) pour la liste complète) :
-
-- **👥 Personnes** : person (ID: 0)
-- **🐕 Animaux** : cat (ID: 15), dog (ID: 16), horse (ID: 17), cow (ID: 19), sheep (ID: 18), etc.
-- **🚗 Véhicules** : car (ID: 2), bus (ID: 5), truck (ID: 7), motorcycle (ID: 3), bicycle (ID: 1), etc.
-- **🏠 Objets** : chair (ID: 56), dining table (ID: 60), laptop (ID: 63), cell phone (ID: 67), book, etc.
-- **🍎 Nourriture** : apple (ID: 47), banana (ID: 46), pizza (ID: 53), cake (ID: 55), etc.
-- **⚽ Sports** : sports ball (ID: 32), tennis racket (ID: 38), baseball bat (ID: 34), etc.
+| Taille | Fichier COCO | Fichier OIV7 | Vitesse | Précision | Usage |
+|--------|--------------|--------------|---------|-----------|-------|
+| Nano   | yolov8n.pt | yolov8n-oiv7.pt | +++ | ++ | Mobile, IoT |
+| Small  | yolov8s.pt | yolov8s-oiv7.pt | ++ | +++ | Équilibre |
+| **Medium** | **yolov8m.pt** | **yolov8m-oiv7.pt** | + | ++++ | **Recommandé** |
+| Large  | yolov8l.pt | yolov8l-oiv7.pt | - | +++++ | Haute précision |
+| Huge   | yolov8x.pt | yolov8x-oiv7.pt | -- | +++++ | Recherche |
 
 ## 📁 Structure du projet
 
@@ -230,32 +240,38 @@ yolov8_object_detection/
 ├── venv/                    # Environnement virtuel Python
 ├── requirements.txt         # Dépendances Python
 ├── install.sh               # Script d'installation automatique
-├── analyze_image.py         # Script principal d'analyse
-├── votre_image.jpg          # Image à analyser
-├── README.md                # Ce fichier
-└── yolov8m.pt               # Modèle YOLOv8 
+├── analyze_image.py         # Script principal d'analyse multi-datasets
+├── votre_image.jpg          # Image de test
+└──README.md                 # Ce fichier
+
 ```
 
 **Fichiers générés automatiquement :**
 - `venv/` - Environnement virtuel créé lors de l'installation
-- `yolov8m.pt` - Modèle YOLOv8 téléchargé automatiquement (~50MB)
+- `yolov8*.pt` - Modèles YOLOv8 téléchargés automatiquement (~50-200MB chacun)
 
 ### Visualisation
 
-Le script génère une **image annotée** avec des boîtes colorées autour des objets détectés
+Le script génère une **image annotée** avec des boîtes colorées autour des objets détectés, adaptée au dataset utilisé.
 
 ## 🔧 Personnalisation
 
-### Changer le modèle
+### Changer le dataset et la taille du modèle
 
-Modifiez la ligne dans `analyze_image.py` :
+Modifiez les lignes dans `analyze_image.py` :
 
 ```python
-# Modèle plus rapide (moins précis)
-model = YOLO("yolov8s.pt")
+# Dataset COCO - Modèles plus rapides
+dataset_choice = 'n-coco'  # Nano (plus rapide)
+dataset_choice = 's-coco'  # Small
+dataset_choice = 'm-coco'  # Medium (recommandé)
+dataset_choice = 'l-coco'  # Large (plus précis)
+dataset_choice = 'x-coco'  # XLarge (très précis)
 
-# Modèle plus précis (plus lent)
-model = YOLO("yolov8l.pt")
+# Dataset Open Images V7 - Classes spécialisées
+dataset_choice = 'n-oiv7'  # Nano
+dataset_choice = 'm-oiv7'  # Medium (recommandé)
+dataset_choice = 'x-oiv7'  # XLarge (très précis)
 ```
 
 ### Analyser une autre image
@@ -266,10 +282,39 @@ Modifiez la ligne dans `analyze_image.py` :
 image_path = "votre_image.jpg"  # Changez ici
 ```
 
+## 📊 Comparaison des datasets
+
+### Quand utiliser COCO ?
+
+✅ **Utilisez COCO si :**
+- Vous voulez détecter des objets généraux (personnes, voitures, animaux courants)
+- Vous avez besoin de la meilleure précision possible
+- Vous travaillez sur des applications grand public
+- Vous voulez des résultats rapides et fiables
+
+### Quand utiliser Open Images V7 ?
+
+✅ **Utilisez Open Images V7 si :**
+- Vous avez besoin de classes très spécifiques (types de chiens, modèles de voitures)
+- Vous travaillez sur des domaines spécialisés
+- Vous avez besoin de détecter des objets rares
+- Vous pouvez accepter une précision légèrement moindre
+
+### Comparaison des performances
+
+| Critère | COCO (80 classes) | Open Images V7 (600 classes) |
+|---------|-------------------|------------------------------|
+| **Précision générale** | +++++ | +++ |
+| **Vitesse** | +++++ | ++++ |
+| **Classes spécialisées** | ++ | +++++ |
+| **Facilité d'utilisation** | +++++ | +++ |
+| **Taille du modèle** | +++++ | +++ |
+
 ## 📖 Ressources supplémentaires
 
 - [Documentation Ultralytics](https://docs.ultralytics.com/)
 - [Dataset COCO](https://cocodataset.org/)
+- [Dataset Open Images V7](https://storage.googleapis.com/openimages/web/index.html)
 - [YOLOv8 Paper](https://arxiv.org/abs/2305.09972)
 
 ## 📄 Licence

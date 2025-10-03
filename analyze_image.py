@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script d'analyse d'images utilisant YOLOv8 pré-entraîné sur le dataset COCO
-Détecte et identifie les objets selon les 80 classes du dataset COCO
+Script d'analyse d'images utilisant YOLOv8 pré-entraîné sur différents datasets
+Supporte COCO, Open Images V7, et modèles personnalisés
 """
 
 import cv2 # pour la lecture des images
@@ -14,19 +14,66 @@ import numpy as np # pour les calculs numériques
 
 _model_cache = {}
 
-# Classes du dataset COCO (80 classes)
-COCO_CLASSES = [
-    'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-    'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-    'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-    'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-    'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-    'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-    'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
-    'chair', 'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop',
-    'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink',
-    'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
-]
+# Informations sur les datasets supportés
+DATASET_INFO = {
+    'coco': {
+        'name': 'COCO',
+        'full_name': 'Common Objects in Context',
+        'classes': None, # 80 classes
+        'num_classes': 80,
+        'website': 'https://cocodataset.org/',
+        'description': 'Dataset généraliste avec 80 classes d\'objets communs'
+    },
+    'oiv7': {
+        'name': 'Open Images V7',
+        'full_name': 'Open Images Dataset V7',
+        'classes': None,  # 600 classes
+        'num_classes': 600,
+        'website': 'https://storage.googleapis.com/openimages/web/index.html',
+        'description': 'Dataset large avec 600 classes d\'objets variés'
+    },
+    'custom': {
+        'name': 'Personnalisé',
+        'full_name': 'Modèle personnalisé',
+        'classes': None,
+        'num_classes': 'Variable',
+        'website': 'N/A',
+        'description': 'Modèle entraîné sur un dataset personnalisé'
+    }
+}
+
+def detect_dataset_type(model_path):
+    """
+    Détecte le type de dataset basé sur le nom du modèle
+    
+    Args:
+        model_path (str): Chemin vers le modèle
+        
+    Returns:
+        str: Type de dataset ('coco', 'oiv7', 'custom')
+    """
+    if 'oiv7' in model_path.lower():
+        if model_path[6] == 'n':
+            return 'n-oiv7'
+        elif model_path[6] == 's':
+            return 's-oiv7'
+        elif model_path[6] == 'm':
+            return 'm-oiv7'
+        elif model_path[6] == 'l':
+            return 'l-oiv7'
+        elif model_path[6] == 'x':
+            return 'x-oiv7'
+    else:
+        if model_path[6] == 'n':
+            return 'n-coco'
+        elif model_path[6] == 's':
+            return 's-coco'
+        elif model_path[6] == 'm':
+            return 'm-coco'
+        elif model_path[6] == 'l':
+            return 'l-coco'
+        elif model_path[6] == 'x':
+            return 'x-coco'
 
 def get_model(model_path):
     """
@@ -51,14 +98,18 @@ def get_model(model_path):
     
     return _model_cache[model_path]
 
-def analyze_image(image_path, model_path):
+def analyze_image(image_path, model_path, seuil_conf):
     """
-    Analyse une image avec YOLOv8 pré-entraîné sur le dataset COCO
+    Analyse une image avec YOLOv8 pré-entraîné sur différents datasets
     
     Args:
         image_path (str): Chemin vers l'image à analyser
-        model_path (str): Chemin vers le modèle YOLOv8 pré-entraîné COCO
+        model_path (str): Chemin vers le modèle YOLOv8
     """
+    
+    # Détecter le type de dataset
+    dataset_type = detect_dataset_type(model_path)
+    dataset_info = DATASET_INFO[dataset_type[2:]]
     
     # Vérifier si l'image existe
     try:
@@ -79,17 +130,20 @@ def analyze_image(image_path, model_path):
     
     # Effectuer la détection
     try:
-        results = model(image_path)
+        results = model(image_path,conf=seuil_conf)
         result = results[0]
     except Exception as e:
         print(f"❌ Erreur lors de l'analyse: {e}")
         return
     
-    # Afficher uniquement les résultats de détection PyTorch + COCO
+    # Afficher les résultats de détection
     print()
-    print("🎯 DÉTECTION PYTORCH + DATASET COCO")
+    print(f"🎯 DÉTECTION PYTORCH + DATASET {dataset_info['name'].upper()}")
     print("=" * 50)
-
+    print(f"📊 Dataset: {dataset_info['full_name']}")
+    print(f"🔢 Nombre de classes: {dataset_info['num_classes']}")
+    print(f"📝 Description: {dataset_info['description']}")
+    print()
     
     if result.boxes is not None and len(result.boxes) > 0:
         print(f"📊 Nombre d'objets détectés: {len(result.boxes)}")
@@ -101,7 +155,7 @@ def analyze_image(image_path, model_path):
         # Image avec détections
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         ax.imshow(image_rgb)
-        ax.set_title("Objets détectés", fontsize=14, fontweight='bold', pad=20)
+        ax.set_title(f"Objets détectés - {dataset_info['name']}", fontsize=14, fontweight='bold', pad=20)
         ax.axis('off')
         
         # Couleurs pour les boîtes de détection
@@ -116,10 +170,10 @@ def analyze_image(image_path, model_path):
             class_id = int(box.cls[0].cpu().numpy())
             class_name = result.names[class_id]
             
-            # Afficher les informations avec l'ID de classe COCO
+            # Afficher les informations
             print(f"🔸 Objet {i+1}:")
             print(f"   📝 Nom: {class_name}")
-            print(f"   🆔 ID COCO: {class_id}")
+            print(f"   🆔 ID: {class_id}")
             print(f"   🎯 Confiance: {confidence:.2%}")
             print(f"   📍 Position: ({int(x1)}, {int(y1)}) → ({int(x2)}, {int(y2)})")
             print(f"   📏 Taille: {int(x2-x1)}x{int(y2-y1)} pixels")
@@ -150,40 +204,76 @@ def analyze_image(image_path, model_path):
     
     print(f"\n🏁 Analyse terminée!")
 
-def show_coco_info():
+def show_dataset_info(dataset_type):
     """
-    Affiche les informations sur le dataset COCO utilisé
+    Affiche les informations sur le dataset utilisé
+    
+    Args:
+        dataset_type (str): Type de dataset ('coco', 'oiv7', 'custom')
     """
+    dataset_info = DATASET_INFO[dataset_type[2:]]
+    
     print()
-    print("📊 INFORMATIONS DATASET COCO")
+    print(f"📊 INFORMATIONS DATASET {dataset_info['name'].upper()}")
     print("=" * 50)
-    print(f"🔢 Nombre total de classes: {len(COCO_CLASSES)}")
-    print(f"📚 Dataset: Common Objects in Context (COCO)")
-    print(f"🌐 Site officiel: https://cocodataset.org/")
-    print(f"📈 Images d'entraînement: 118,287")
-    print(f"📈 Images de validation: 5,000")
-    print(f"📈 Images de test: 40,670")
-    print(f"🎯 Objets annotés: 1.5 million")
+    print(f"📚 Dataset: {dataset_info['full_name']}")
+    print(f"🔢 Nombre de classes: {dataset_info['num_classes']}")
+    print(f"🌐 Site officiel: {dataset_info['website']}")
+    print(f"📝 Description: {dataset_info['description']}")
     print()
-    print("🏷️ Catégories principales:")
-    print("   👥 Personnes: person")
-    print("   🚗 Véhicules: car, bus, truck, motorcycle, bicycle, etc.")
-    print("   🐕 Animaux: cat, dog, horse, cow, sheep, bird, etc.")
-    print("   🏠 Objets: chair, table, laptop, cell phone, book, etc.")
-    print("   🍎 Nourriture: apple, banana, pizza, cake, etc.")
-    print("   ⚽ Sports: sports ball, tennis racket, baseball bat, etc.")
+    
+    if dataset_type == 'coco':
+        print("🏷️ Catégories principales:")
+        print("   👥 Personnes: person")
+        print("   🚗 Véhicules: car, bus, truck, motorcycle, bicycle, etc.")
+        print("   🐕 Animaux: cat, dog, horse, cow, sheep, bird, etc.")
+        print("   🏠 Objets: chair, table, laptop, cell phone, book, etc.")
+        print("   🍎 Nourriture: apple, banana, pizza, cake, etc.")
+        print("   ⚽ Sports: sports ball, tennis racket, baseball bat, etc.")
+    elif dataset_type == 'oiv7':
+        print("🏷️ Catégories principales:")
+        print("   👥 Personnes et parties du corps")
+        print("   🚗 Véhicules de tous types")
+        print("   🐕 Animaux domestiques et sauvages")
+        print("   🏠 Objets du quotidien")
+        print("   🍎 Nourriture et boissons")
+        print("   ⚽ Sports et loisirs")
+        print("   🎨 Art et culture")
+        print("   🌍 Nature et environnement")
     print()
 
 def main():
     """Fonction principale"""
-    image_path = "example.jpg"
-    model_path = "yolov8x.pt"
+    # Configuration - Changez ces valeurs pour tester différents datasets
+    image_path = "test.jpg"
     
-    # Afficher les informations sur le dataset COCO
-    show_coco_info()
+    # Exemples de modèles pour différents datasets :
+    model_paths = {
+        'n-coco': "yolov8n.pt",           
+        's-coco': "yolov8s.pt",           
+        'm-coco': "yolov8m.pt",           
+        'l-coco': "yolov8l.pt",           
+        'x-coco': "yolov8x.pt",           
+        'n-oiv7': "yolov8n-oiv7.pt",      
+        's-oiv7': "yolov8s-oiv7.pt",      
+        'm-oiv7': "yolov8m-oiv7.pt",      
+        'l-oiv7': "yolov8l-oiv7.pt",      
+        'x-oiv7': "yolov8x-oiv7.pt",      
+
+    }
+    
+    # Choisir le dataset à utiliser
+    dataset_choice = 'x-oiv7' 
+    model_path = model_paths[dataset_choice]
+
+    # Choisir le seuil de confiance
+    seuil_conf = 0.10
+    
+    # Afficher les informations sur le dataset
+    show_dataset_info(dataset_choice)
     
     # Lancer l'analyse
-    analyze_image(image_path, model_path)
+    analyze_image(image_path, model_path, seuil_conf)
 
 if __name__ == "__main__":
     main()
