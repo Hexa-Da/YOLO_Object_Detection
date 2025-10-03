@@ -1,6 +1,6 @@
 # 🔍 Analyseur d'images YOLOv8 + PyTorch + Dataset COCO
 
-Ce projet analyse l'image `objet-pub.png` en utilisant YOLOv8 pré-entraîné sur le dataset COCO avec PyTorch pour détecter et identifier les objets selon les 80 classes du dataset COCO.
+Ce projet analyse l'image `votre_image.jpg` en utilisant YOLOv8 pré-entraîné sur le dataset COCO avec PyTorch pour détecter et identifier les objets selon les 80 classes du dataset COCO.
 
 ## 📋 Table des matières
 
@@ -18,7 +18,7 @@ Ce projet analyse l'image `objet-pub.png` en utilisant YOLOv8 pré-entraîné su
 
 ```bash
 # 1. Aller dans le dossier du projet
-cd /Users/$(whoami)/Documents/PYTHON/yolov8_object_detection
+cd yolov8_object_detection
 
 # 2. Exécuter le script d'installation
 chmod +x install.sh
@@ -29,7 +29,6 @@ Le script d'installation :
 - ✅ Vérifie que Python 3 et pip sont installés
 - 📦 Crée un environnement virtuel (recommandé)
 - 📥 Installe automatiquement toutes les dépendances
-- 🗂️ Crée le dossier `examples/`
 - 🔧 Rend les scripts exécutables
 
 ### Méthode 2 : Installation manuelle
@@ -85,7 +84,7 @@ error: externally-managed-environment
 **Important :** Vous devez activer l'environnement virtuel à chaque nouvelle session terminal :
 
 ```bash
-cd /Users/$(whoami)/Documents/PYTHON/yolov8_object_detection
+cd yolov8_object_detection
 source venv/bin/activate
 ```
 
@@ -109,12 +108,11 @@ python analyze_image.py
 ### Ce que fait le script
 
 1. **📊 Affiche les informations** sur le dataset COCO (80 classes, 1.5M objets)
-2. **📥 Charge l'image** `example.jpg`
+2. **📥 Charge l'image** `votre_image.jpg`
 3. **🤖 Télécharge le modèle** YOLOv8 pré-entraîné sur COCO (yolov8m.pt - ~50MB)
 4. **🔍 Analyse l'image** avec PyTorch et YOLOv8 selon les classes COCO
 5. **📊 Affiche les résultats** : objets détectés + ID COCO + confiance + position
 6. **🖼️ Crée une visualisation** avec des boîtes de détection colorées
-7. **💾 Sauvegarde** l'image annotée (`detection.png`)
 
 
 ## 📊 Dataset COCO
@@ -208,11 +206,11 @@ Image (640x640) → Backbone → Neck → Head → Détections
 
 | Taille | Fichier | Vitesse | Précision | Usage |
 |--------|---------|---------|-----------|-------|
-| Nano   | yolov8n.pt | ⚡⚡⚡ | ⭐⭐ | Mobile, IoT |
-| Small  | yolov8s.pt | ⚡⚡ | ⭐⭐⭐ | Équilibre |
-| **Medium** | **yolov8m.pt** | ⚡ | ⭐⭐⭐⭐ | **Recommandé** |
-| Large  | yolov8l.pt | 🐌 | ⭐⭐⭐⭐⭐ | Haute précision |
-| Huge   | yolov8x.pt | 🐌🐌 | ⭐⭐⭐⭐⭐ | Recherche |
+| Nano   | yolov8n.pt | +++ | ++ | Mobile, IoT |
+| Small  | yolov8s.pt | ++ | +++ | Équilibre |
+| **Medium** | **yolov8m.pt** | + | ++++ | **Recommandé** |
+| Large  | yolov8l.pt | - | +++++ | Haute précision |
+| Huge   | yolov8x.pt | -- | +++++ | Recherche |
 
 ### Classes détectables
 
@@ -233,28 +231,18 @@ yolov8_object_detection/
 ├── requirements.txt         # Dépendances Python
 ├── install.sh               # Script d'installation automatique
 ├── analyze_image.py         # Script principal d'analyse
-├── example.jpg              # Image à analyser
+├── votre_image.jpg          # Image à analyser
 ├── README.md                # Ce fichier
-├── examples/                # Dossier pour les images d'exemple
-├── detection.png            # Image annotée (générée automatiquement)
-└── yolov8m.pt               # Modèle YOLOv8 (téléchargé automatiquement)
+└── yolov8m.pt               # Modèle YOLOv8 
 ```
 
 **Fichiers générés automatiquement :**
 - `venv/` - Environnement virtuel créé lors de l'installation
-- `detection.png` - Image annotée générée par l'analyse
 - `yolov8m.pt` - Modèle YOLOv8 téléchargé automatiquement (~50MB)
-
-
-
-
 
 ### Visualisation
 
-Le script génère :
-1. **Image originale** : L'image `objet-pub.png` telle quelle
-2. **Image annotée** : Avec des boîtes colorées autour des objets détectés
-3. **Image sauvegardée** : `detection_objet-pub.png` pour référence
+Le script génère une **image annotée** avec des boîtes colorées autour des objets détectés
 
 ## 🔧 Personnalisation
 
@@ -276,33 +264,6 @@ Modifiez la ligne dans `analyze_image.py` :
 
 ```python
 image_path = "votre_image.jpg"  # Changez ici
-```
-
-## 🚨 Dépannage
-
-### Erreur "externally-managed-environment"
-
-**Problème :** Votre système Python est géré par Homebrew.
-
-**Solution :** Utilisez l'environnement virtuel (voir section Installation)
-
-### Erreur "ModuleNotFoundError: No module named 'ultralytics'"
-
-**Problème :** L'environnement virtuel n'est pas activé.
-
-**Solution :**
-```bash
-source venv/bin/activate
-python analyze_image.py
-```
-
-### Erreur "command not found: python"
-
-**Problème :** Python n'est pas dans le PATH.
-
-**Solution :**
-```bash
-python3 analyze_image.py
 ```
 
 ## 📖 Ressources supplémentaires

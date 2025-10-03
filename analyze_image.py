@@ -4,13 +4,15 @@ Script d'analyse d'images utilisant YOLOv8 pré-entraîné sur le dataset COCO
 Détecte et identifie les objets selon les 80 classes du dataset COCO
 """
 
-import cv2
-import torch
-from ultralytics import YOLO
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from PIL import Image
-import numpy as np
+import cv2 # pour la lecture des images
+import torch # pour le deep learning
+from ultralytics import YOLO # pour le modèle YOLOv8
+import matplotlib.pyplot as plt # pour la visualisation des images
+import matplotlib.patches as patches # pour les boîtes de détection
+from PIL import Image # pour la manipulation des images
+import numpy as np # pour les calculs numériques
+
+_model_cache = {}
 
 # Classes du dataset COCO (80 classes)
 COCO_CLASSES = [
@@ -26,14 +28,32 @@ COCO_CLASSES = [
     'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
 ]
 
-def analyze_image(image_path, model_path="yolov8l.pt"):
+def get_model(model_path):
+    """
+    Récupère un modèle depuis le cache ou le charge s'il n'existe pas
+    
+    Args:
+        model_path (str): Chemin vers le modèle YOLOv8
+        
+    Returns:
+        YOLO: Modèle YOLOv8 chargé
+    """
+    if model_path not in _model_cache:
+        print(f"🔄 Chargement du modèle {model_path}...")
+        try:
+            _model_cache[model_path] = YOLO(model_path)
+            print(f"✅ Modèle {model_path} chargé avec succès")
+        except Exception as e:
+            print(f"❌ Erreur lors du chargement du modèle: {e}")
+            raise
+    else:
+        print(f"♻️  Utilisation du modèle {model_path} depuis le cache")
+    
+    return _model_cache[model_path]
+
+def analyze_image(image_path, model_path):
     """
     Analyse une image avec YOLOv8 pré-entraîné sur le dataset COCO
-    
-    Le modèle YOLOv8 utilisé est pré-entraîné sur le dataset COCO qui contient :
-    - 80 classes d'objets différentes
-    - Plus de 330,000 images
-    - 1.5 million d'objets annotés
     
     Args:
         image_path (str): Chemin vers l'image à analyser
@@ -50,9 +70,9 @@ def analyze_image(image_path, model_path="yolov8l.pt"):
         print(f"❌ Erreur lors du chargement de l'image: {e}")
         return
     
-    # Charger le modèle YOLOv8
+    # Récupérer le modèle (depuis le cache ou le charger)
     try:
-        model = YOLO(model_path)
+        model = get_model(model_path)
     except Exception as e:
         print(f"❌ Erreur lors du chargement du modèle: {e}")
         return
@@ -66,28 +86,23 @@ def analyze_image(image_path, model_path="yolov8l.pt"):
         return
     
     # Afficher uniquement les résultats de détection PyTorch + COCO
+    print()
     print("🎯 DÉTECTION PYTORCH + DATASET COCO")
     print("=" * 50)
-    print("📊 Modèle pré-entraîné sur le dataset COCO (80 classes)")
-    print()
+
     
     if result.boxes is not None and len(result.boxes) > 0:
         print(f"📊 Nombre d'objets détectés: {len(result.boxes)}")
         print()
         
         # Créer une figure pour afficher l'image avec les détections
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 8))
-        
-        # Image originale
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        ax1.imshow(image_rgb)
-        ax1.set_title("Image originale", fontsize=14, fontweight='bold')
-        ax1.axis('off')
+        fig, ax = plt.subplots(figsize=(8, 8))
         
         # Image avec détections
-        ax2.imshow(image_rgb)
-        ax2.set_title("Objets détectés", fontsize=14, fontweight='bold')
-        ax2.axis('off')
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        ax.imshow(image_rgb)
+        ax.set_title("Objets détectés", fontsize=14, fontweight='bold', pad=20)
+        ax.axis('off')
         
         # Couleurs pour les boîtes de détection
         colors = plt.cm.tab10(np.linspace(0, 1, 10))
@@ -116,10 +131,10 @@ def analyze_image(image_path, model_path="yolov8l.pt"):
                 (x1, y1), x2-x1, y2-y1,
                 linewidth=3, edgecolor=color, facecolor='none'
             )
-            ax2.add_patch(rect)
+            ax.add_patch(rect)
             
             # Ajouter le label
-            ax2.text(
+            ax.text(
                 x1, y1-10, f"{class_name} {confidence:.2%}",
                 fontsize=10, fontweight='bold',
                 bbox=dict(boxstyle="round,pad=0.3", facecolor=color, alpha=0.7),
@@ -128,23 +143,10 @@ def analyze_image(image_path, model_path="yolov8l.pt"):
         
         # Afficher la figure
         plt.tight_layout()
-        plt.show()
-        
-        # Sauvegarder l'image annotée
-        output_path = "detection.png"
-        result.save(output_path)
-        print(f"💾 Image annotée sauvegardée: {output_path}")
+        plt.show()   
         
     else:
         print("❌ Aucun objet détecté dans l'image")
-        
-        # Afficher l'image originale
-        plt.figure(figsize=(10, 8))
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        plt.imshow(image_rgb)
-        plt.title("Image originale - Aucun objet détecté", fontsize=14, fontweight='bold')
-        plt.axis('off')
-        plt.show()
     
     print(f"\n🏁 Analyse terminée!")
 
@@ -152,6 +154,7 @@ def show_coco_info():
     """
     Affiche les informations sur le dataset COCO utilisé
     """
+    print()
     print("📊 INFORMATIONS DATASET COCO")
     print("=" * 50)
     print(f"🔢 Nombre total de classes: {len(COCO_CLASSES)}")
@@ -174,18 +177,13 @@ def show_coco_info():
 def main():
     """Fonction principale"""
     image_path = "example.jpg"
+    model_path = "yolov8x.pt"
     
     # Afficher les informations sur le dataset COCO
     show_coco_info()
     
-    # Vérifier si l'image existe
-    import os
-    if not os.path.exists(image_path):
-        print(f"❌ Erreur: L'image '{image_path}' n'existe pas dans le dossier actuel")
-        return
-    
     # Lancer l'analyse
-    analyze_image(image_path)
+    analyze_image(image_path, model_path)
 
 if __name__ == "__main__":
     main()
