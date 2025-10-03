@@ -1,6 +1,6 @@
-# 🔍 Analyseur d'images YOLOv8 + PyTorch + Multi-Datasets
+# Analyseur d'images YOLOv8 + PyTorch + Multi-Datasets
 
-Ce projet analyse des images en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter et identifier les objets selon les classes disponibles dans chaque dataset.
+Ce projet analyse des images en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter, classifier et segmenter les objets selon les classes disponibles dans chaque dataset.
 
 ## 📋 Table des matières
 
@@ -8,10 +8,11 @@ Ce projet analyse des images en utilisant YOLOv8 pré-entraîné sur différents
 2. [Pourquoi un environnement virtuel ?](#pourquoi-un-environnement-virtuel)
 3. [Utilisation](#utilisation)
 4. [Datasets supportés](#datasets-supportés)
-5. [Comment fonctionne YOLO ?](#comment-fonctionne-yolo)
-6. [Structure du projet](#structure-du-projet)
-7. [Résultats d'analyse](#résultats-danalyse)
-8. [Comparaison des datasets](#comparaison-des-datasets)
+5. [Tâches disponibles](#tâches-disponibles)
+6. [Comment fonctionne YOLO ?](#comment-fonctionne-yolo)
+7. [Structure du projet](#structure-du-projet)
+8. [Résultats d'analyse](#résultats-danalyse)
+9. [Comparaison des datasets](#comparaison-des-datasets)
 
 ## 🚀 Installation
 
@@ -110,7 +111,7 @@ python analyze_image.py
 3. **🤖 Charge le modèle** YOLOv8 pré-entraîné (avec cache pour éviter les rechargements)
 4. **🔍 Analyse l'image** avec PyTorch et YOLOv8 selon les classes du dataset
 5. **📊 Affiche les résultats** : objets détectés + ID + confiance + position
-6. **🖼️ Crée une visualisation** avec des boîtes de détection colorées
+6. **🖼️ Crée une visualisation** avec des boîtes de détection et masques de segmentation 
 
 ### Configuration des datasets
 
@@ -119,20 +120,30 @@ Dans `analyze_image.py`, vous pouvez choisir le dataset à utiliser :
 ```python
 # Exemples de modèles pour différents datasets :
 model_paths = {
-    'n-coco': "yolov8n.pt",           # COCO Nano (80 classes)
-    's-coco': "yolov8s.pt",           # COCO Small (80 classes)
-    'm-coco': "yolov8m.pt",           # COCO Medium (80 classes)
-    'l-coco': "yolov8l.pt",           # COCO Large (80 classes)
-    'x-coco': "yolov8x.pt",           # COCO XLarge (80 classes)
-    'n-oiv7': "yolov8n-oiv7.pt",      # Open Images V7 Nano (600 classes)
-    's-oiv7': "yolov8s-oiv7.pt",      # Open Images V7 Small (600 classes)
-    'm-oiv7': "yolov8m-oiv7.pt",      # Open Images V7 Medium (600 classes)
-    'l-oiv7': "yolov8l-oiv7.pt",      # Open Images V7 Large (600 classes)
-    'x-oiv7': "yolov8x-oiv7.pt",      # Open Images V7 XLarge (600 classes)
+    # DÉTECTION COCO (80 classes)
+    'n-coco': "yolov8n.pt",           
+    's-coco': "yolov8s.pt",           
+    'm-coco': "yolov8m.pt",           
+    'l-coco': "yolov8l.pt",           
+    'x-coco': "yolov8x.pt",           
+    
+    # SEGMENTATION COCO (80 classes + masques)
+    'n-seg': "yolov8n-seg.pt",
+    's-seg': "yolov8s-seg.pt", 
+    'm-seg': "yolov8m-seg.pt",
+    'l-seg': "yolov8l-seg.pt",
+    'x-seg': "yolov8x-seg.pt",
+    
+    # DÉTECTION Open Images V7 (600 classes)
+    'n-oiv7': "yolov8n-oiv7.pt",      
+    's-oiv7': "yolov8s-oiv7.pt",      
+    'm-oiv7': "yolov8m-oiv7.pt",      
+    'l-oiv7': "yolov8l-oiv7.pt",      
+    'x-oiv7': "yolov8x-oiv7.pt",      
 }
 
 # Choisir le dataset à utiliser
-dataset_choice = 'm-coco'  # Changez ici pour tester différents datasets
+dataset_choice = 'm-seg'  # Segmentation COCO Medium
 ```
 
 ## 📊 Datasets supportés
@@ -149,6 +160,10 @@ dataset_choice = 'm-coco'  # Changez ici pour tester différents datasets
 - **🎯 1.5 million d'objets annotés**
 - **🌐 Site officiel** : https://cocodataset.org/
 
+#### Modèles disponibles
+- **Détection** : `yolov8n.pt` à `yolov8x.pt` (boîtes de détection)
+- **Segmentation** : `yolov8n-seg.pt` à `yolov8x-seg.pt` (masques de pixels)
+
 ### 🌐 Dataset Open Images V7
 
 **Dataset très large avec de nombreuses classes spécialisées**
@@ -158,6 +173,10 @@ dataset_choice = 'm-coco'  # Changez ici pour tester différents datasets
 - **📈 Plus de 9 millions d'images**
 - **🎯 Plus de 36 millions de boîtes de détection**
 - **🌐 Site officiel** : https://storage.googleapis.com/openimages/web/index.html
+
+#### Modèles disponibles
+- **Détection uniquement** : `yolov8n-oiv7.pt` à `yolov8x-oiv7.pt`
+- **❌ Pas de segmentation** : Open Images V7 ne propose pas de modèles de segmentation
 
 #### Avantages
 - **🎯 Classes très spécifiques** : Différents types de chiens, voitures, etc.
@@ -204,15 +223,7 @@ def get_model(model_path):
 3. **🎯 Prédiction directe** : Prédit directement les boîtes de détection
 4. **⚡ Vitesse** : Beaucoup plus rapide que les méthodes traditionnelles
 
-### Architecture YOLOv8
-
-```
-Image (640x640) → Backbone → Neck → Head → Détections
-     ↓              ↓        ↓      ↓         ↓
-   Pixels      Caractéristiques  Fusion  Prédictions  [x,y,w,h,conf,class]
-```
-
-### Processus de détection
+### Processus de detection et segmentation
 
 1. **📥 Entrée** : Image redimensionnée à 640x640 pixels
 2. **🧠 Traitement** : Le réseau extrait des caractéristiques
@@ -220,18 +231,19 @@ Image (640x640) → Backbone → Neck → Head → Détections
    - **Position** : Coordonnées de la boîte (x1, y1, x2, y2)
    - **Confiance** : Probabilité que ce soit un objet (0-1)
    - **Classe** : Type d'objet selon le dataset utilisé
+   - **Masque** : Masque de pixels précis de l'objet
 4. **🔍 Filtrage** : Garde seulement les détections avec confiance > seuil
-5. **📊 Résultat** : Liste des objets détectés avec leurs propriétés
+5. **📊 Résultat** : Liste des objets segmentés avec boîtes + masques
 
 ### Modèles YOLOv8 disponibles
 
-| Taille | Fichier COCO | Fichier OIV7 | Vitesse | Précision | Usage |
-|--------|--------------|--------------|---------|-----------|-------|
-| Nano   | yolov8n.pt | yolov8n-oiv7.pt | +++ | ++ | Mobile, IoT |
-| Small  | yolov8s.pt | yolov8s-oiv7.pt | ++ | +++ | Équilibre |
-| **Medium** | **yolov8m.pt** | **yolov8m-oiv7.pt** | + | ++++ | **Recommandé** |
-| Large  | yolov8l.pt | yolov8l-oiv7.pt | - | +++++ | Haute précision |
-| Huge   | yolov8x.pt | yolov8x-oiv7.pt | -- | +++++ | Recherche |
+| Taille | Détection COCO | Segmentation COCO | Détection OIV7 | Vitesse | Précision | Usage |
+|--------|----------------|-------------------|----------------|---------|-----------|-------|
+| Nano   | yolov8n.pt | yolov8n-seg.pt | yolov8n-oiv7.pt | +++ | ++ | Mobile, IoT |
+| Small  | yolov8s.pt | yolov8s-seg.pt | yolov8s-oiv7.pt | ++ | +++ | Équilibre |
+| **Medium** | **yolov8m.pt** | **yolov8m-seg.pt** | **yolov8m-oiv7.pt** | + | ++++ | **Recommandé** |
+| Large  | yolov8l.pt | yolov8l-seg.pt | yolov8l-oiv7.pt | - | +++++ | Haute précision |
+| Huge   | yolov8x.pt | yolov8x-seg.pt | yolov8x-oiv7.pt | -- | +++++ | Recherche |
 
 ## 📁 Structure du projet
 
@@ -252,7 +264,10 @@ yolov8_object_detection/
 
 ### Visualisation
 
-Le script génère une **image annotée** avec des boîtes colorées autour des objets détectés, adaptée au dataset utilisé.
+Le script génère une **image annotée** avec :
+- **Boîtes de détection** colorées autour des objets
+- **Masques de segmentation** semi-transparents (modèles -seg)
+- **Labels** avec nom de classe et confiance
 
 ## 🔧 Personnalisation
 
@@ -261,14 +276,21 @@ Le script génère une **image annotée** avec des boîtes colorées autour des 
 Modifiez les lignes dans `analyze_image.py` :
 
 ```python
-# Dataset COCO - Modèles plus rapides
+# Dataset COCO - Détection
 dataset_choice = 'n-coco'  # Nano (plus rapide)
 dataset_choice = 's-coco'  # Small
 dataset_choice = 'm-coco'  # Medium (recommandé)
 dataset_choice = 'l-coco'  # Large (plus précis)
 dataset_choice = 'x-coco'  # XLarge (très précis)
 
-# Dataset Open Images V7 - Classes spécialisées
+# Dataset COCO - Segmentation
+dataset_choice = 'n-seg'   # Nano (plus rapide)
+dataset_choice = 's-seg'   # Small
+dataset_choice = 'm-seg'   # Medium (recommandé)
+dataset_choice = 'l-seg'   # Large (plus précis)
+dataset_choice = 'x-seg'   # XLarge (très précis)
+
+# Dataset Open Images V7 - Détection uniquement
 dataset_choice = 'n-oiv7'  # Nano
 dataset_choice = 'm-oiv7'  # Medium (recommandé)
 dataset_choice = 'x-oiv7'  # XLarge (très précis)
@@ -291,6 +313,7 @@ image_path = "votre_image.jpg"  # Changez ici
 - Vous avez besoin de la meilleure précision possible
 - Vous travaillez sur des applications grand public
 - Vous voulez des résultats rapides et fiables
+- **Vous avez besoin de segmentation** (masques de pixels)
 
 ### Quand utiliser Open Images V7 ?
 
@@ -299,6 +322,7 @@ image_path = "votre_image.jpg"  # Changez ici
 - Vous travaillez sur des domaines spécialisés
 - Vous avez besoin de détecter des objets rares
 - Vous pouvez accepter une précision légèrement moindre
+- **Vous n'avez besoin que de détection** (pas de segmentation)
 
 ### Comparaison des performances
 
@@ -309,6 +333,8 @@ image_path = "votre_image.jpg"  # Changez ici
 | **Classes spécialisées** | ++ | +++++ |
 | **Facilité d'utilisation** | +++++ | +++ |
 | **Taille du modèle** | +++++ | +++ |
+| **Segmentation** | ✅ | ❌ |
+
 
 ## 📖 Ressources supplémentaires
 

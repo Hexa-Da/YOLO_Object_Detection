@@ -6,7 +6,7 @@ Supporte COCO, Open Images V7, et modèles personnalisés
 
 import cv2 # pour la lecture des images
 import torch # pour le deep learning
-from ultralytics import YOLO # pour le modèle YOLOv8
+from ultralytics import YOLO # pour le modèle YOLOv8 # pour la segmentation des images
 import matplotlib.pyplot as plt # pour la visualisation des images
 import matplotlib.patches as patches # pour les boîtes de détection
 from PIL import Image # pour la manipulation des images
@@ -32,13 +32,13 @@ DATASET_INFO = {
         'website': 'https://storage.googleapis.com/openimages/web/index.html',
         'description': 'Dataset large avec 600 classes d\'objets variés'
     },
-    'custom': {
-        'name': 'Personnalisé',
-        'full_name': 'Modèle personnalisé',
-        'classes': None,
-        'num_classes': 'Variable',
-        'website': 'N/A',
-        'description': 'Modèle entraîné sur un dataset personnalisé'
+    'seg': {
+        'name': 'Segmentation',
+        'full_name': 'YOLOv8 Segmentation (COCO)',
+        'classes': None,  # 80 classes COCO
+        'num_classes': 80,
+        'website': 'https://cocodataset.org/',
+        'description': 'Segmentation d\'objets avec masques de pixels précis'
     }
 }
 
@@ -50,9 +50,20 @@ def detect_dataset_type(model_path):
         model_path (str): Chemin vers le modèle
         
     Returns:
-        str: Type de dataset ('coco', 'oiv7', 'custom')
+        str: Type de dataset ('coco', 'oiv7', 'seg')
     """
-    if 'oiv7' in model_path.lower():
+    if 'seg' in model_path.lower():
+        if model_path[6] == 'n':
+            return 'n-seg'
+        elif model_path[6] == 's':
+            return 's-seg'
+        elif model_path[6] == 'm':
+            return 'm-seg'
+        elif model_path[6] == 'l':
+            return 'l-seg'
+        elif model_path[6] == 'x':
+            return 'x-seg'
+    elif 'oiv7' in model_path.lower():
         if model_path[6] == 'n':
             return 'n-oiv7'
         elif model_path[6] == 's':
@@ -140,76 +151,110 @@ def analyze_image(image_path, model_path, seuil_conf):
     print()
     print(f"🎯 DÉTECTION PYTORCH + DATASET {dataset_info['name'].upper()}")
     print("=" * 50)
-    print(f"📊 Dataset: {dataset_info['full_name']}")
-    print(f"🔢 Nombre de classes: {dataset_info['num_classes']}")
-    print(f"📝 Description: {dataset_info['description']}")
     print()
     
-    if result.boxes is not None and len(result.boxes) > 0:
-        print(f"📊 Nombre d'objets détectés: {len(result.boxes)}")
+    if (result.boxes is not None and len(result.boxes) > 0) or (result.masks is not None and len(result.masks) > 0):
+        print(f"📊 Nombre d'objets détectés: {len(result.boxes) if result.boxes is not None else 0} (Seuil de confiance: {seuil_conf})")
         print()
         
         # Créer une figure pour afficher l'image avec les détections
-        fig, ax = plt.subplots(figsize=(8, 8))
+        fig, ax = plt.subplots(figsize=(10, 8))
         
         # Image avec détections
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         ax.imshow(image_rgb)
-        ax.set_title(f"Objets détectés - {dataset_info['name']}", fontsize=14, fontweight='bold', pad=20)
+        ax.set_title(f"Objets détectés ({dataset_type})", fontsize=14, fontweight='bold', pad=20)
         ax.axis('off')
         
-        # Couleurs pour les boîtes de détection
+        # Couleurs pour les boîtes de détection et masques
         colors = plt.cm.tab10(np.linspace(0, 1, 10))
         
-        for i, box in enumerate(result.boxes):
-            # Coordonnées de la boîte
-            x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+        # Afficher d'abord les masques s'ils existent
+        if result.masks is not None:
             
-            # Informations de l'objet
-            confidence = box.conf[0].cpu().numpy()
-            class_id = int(box.cls[0].cpu().numpy())
-            class_name = result.names[class_id]
+            # Créer un masque combiné pour accélérer l'affichage
+            combined_mask = np.zeros((image_rgb.shape[0], image_rgb.shape[1], 4))
             
-            # Afficher les informations
-            print(f"🔸 Objet {i+1}:")
-            print(f"   📝 Nom: {class_name}")
-            print(f"   🆔 ID: {class_id}")
-            print(f"   🎯 Confiance: {confidence:.2%}")
-            print(f"   📍 Position: ({int(x1)}, {int(y1)}) → ({int(x2)}, {int(y2)})")
-            print(f"   📏 Taille: {int(x2-x1)}x{int(y2-y1)} pixels")
-            print()
+            for i, mask in enumerate(result.masks):
+                # Convertir le masque en numpy array
+                mask_array = mask.data[0].cpu().numpy()
+                
+                # Redimensionner le masque pour qu'il corresponde exactement à l'image
+                mask_resized = cv2.resize(mask_array.astype(np.uint8), 
+                                        (image_rgb.shape[1], image_rgb.shape[0]))
+                
+                # Créer un masque coloré avec transparence
+                color = colors[i % len(colors)]
+                colored_mask = np.zeros((*mask_resized.shape, 4))
+                colored_mask[mask_resized == 1] = (*color[:3], 0.6)
+                
+                # Combiner les masques
+                combined_mask = np.maximum(combined_mask, colored_mask)
             
-            # Dessiner la boîte de détection
-            color = colors[i % len(colors)]
-            rect = patches.Rectangle(
-                (x1, y1), x2-x1, y2-y1,
-                linewidth=3, edgecolor=color, facecolor='none'
-            )
-            ax.add_patch(rect)
-            
-            # Ajouter le label
-            ax.text(
-                x1, y1-10, f"{class_name} {confidence:.2%}",
-                fontsize=10, fontweight='bold',
-                bbox=dict(boxstyle="round,pad=0.3", facecolor=color, alpha=0.7),
-                color='white'
-            )
+            # Afficher le masque combiné en une seule fois
+            ax.imshow(combined_mask)
+        
+        # Ensuite afficher les boîtes et labels
+        if result.boxes is not None:
+            for i, box in enumerate(result.boxes):
+                # Coordonnées de la boîte
+                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                
+                # Informations de l'objet
+                confidence = box.conf[0].cpu().numpy()
+                class_id = int(box.cls[0].cpu().numpy())
+                class_name = result.names[class_id]
+                
+                # Afficher les informations
+                print(f"🔸 Objet {i+1}:")
+                print(f"   📝 Nom: {class_name}")
+                print(f"   🆔 ID: {class_id}")
+                print(f"   🎯 Confiance: {confidence:.2%}")
+                print(f"   📍 Position: ({int(x1)}, {int(y1)}) → ({int(x2)}, {int(y2)})")
+                print(f"   📏 Taille: {int(x2-x1)}x{int(y2-y1)} pixels")
+                print()
+                
+                # Dessiner la boîte de détection
+                color = colors[i % len(colors)]
+                rect = patches.Rectangle(
+                    (x1, y1), x2-x1, y2-y1,
+                    linewidth=3, edgecolor=color, facecolor='none'
+                )
+                ax.add_patch(rect)
+                
+                # Ajouter le label
+                ax.text(
+                    x1, y1-10, f"{class_name} {confidence:.2%}",
+                    fontsize=10, fontweight='bold',
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor=color, alpha=0.7),
+                    color='white'
+                )
         
         # Afficher la figure
         plt.tight_layout()
-        plt.show()   
+        plt.show()
         
     else:
         print("❌ Aucun objet détecté dans l'image")
+        
+        # Afficher l'image originale même si aucun objet n'est détecté
+        plt.figure(figsize=(10, 8))
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        plt.imshow(image_rgb)
+        plt.title(f"Image originale - Aucun objet détecté (conf ≥ {seuil_conf})", 
+                 fontsize=14, fontweight='bold')
+        plt.axis('off')
+        plt.show()
     
     print(f"\n🏁 Analyse terminée!")
+    print()
 
 def show_dataset_info(dataset_type):
     """
     Affiche les informations sur le dataset utilisé
     
     Args:
-        dataset_type (str): Type de dataset ('coco', 'oiv7', 'custom')
+        dataset_type (str): Type de dataset ('coco', 'oiv7', 'seg')
     """
     dataset_info = DATASET_INFO[dataset_type[2:]]
     
@@ -240,6 +285,12 @@ def show_dataset_info(dataset_type):
         print("   ⚽ Sports et loisirs")
         print("   🎨 Art et culture")
         print("   🌍 Nature et environnement")
+    elif dataset_type == 'seg':
+        print("🎨 Fonctionnalités de segmentation:")
+        print("   🔍 Détection d'objets + masques de pixels")
+        print("   📐 Contours précis des objets")
+        print("   🎯 80 classes COCO avec segmentation")
+        print("   💡 Idéal pour l'édition d'images et la robotique")
     print()
 
 def main():
@@ -249,25 +300,34 @@ def main():
     
     # Exemples de modèles pour différents datasets :
     model_paths = {
+        # Modèles de DÉTECTION
         'n-coco': "yolov8n.pt",           
         's-coco': "yolov8s.pt",           
         'm-coco': "yolov8m.pt",           
         'l-coco': "yolov8l.pt",           
         'x-coco': "yolov8x.pt",           
+        
+        # Modèles de SEGMENTATION
+        'n-seg': "yolov8n-seg.pt",
+        's-seg': "yolov8s-seg.pt", 
+        'm-seg': "yolov8m-seg.pt",
+        'l-seg': "yolov8l-seg.pt",
+        'x-seg': "yolov8x-seg.pt",
+        
+        # Modèles Open Images V7
         'n-oiv7': "yolov8n-oiv7.pt",      
         's-oiv7': "yolov8s-oiv7.pt",      
         'm-oiv7': "yolov8m-oiv7.pt",      
         'l-oiv7': "yolov8l-oiv7.pt",      
         'x-oiv7': "yolov8x-oiv7.pt",      
-
     }
     
     # Choisir le dataset à utiliser
-    dataset_choice = 'x-oiv7' 
+    dataset_choice = 'x-seg' 
     model_path = model_paths[dataset_choice]
 
     # Choisir le seuil de confiance
-    seuil_conf = 0.10
+    seuil_conf = 0.25
     
     # Afficher les informations sur le dataset
     show_dataset_info(dataset_choice)
