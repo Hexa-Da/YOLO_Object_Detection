@@ -1,6 +1,6 @@
-# Analyseur d'images et vidéos YOLOv8 + PyTorch + Multi-Datasets
+# Analyseur d'images et vidéos YOLOv8 + PyTorch + Multi-Datasets + Entraînement Personnalisé
 
-Ce projet analyse des images et vidéos en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter, classifier et segmenter les objets selon les classes disponibles dans chaque dataset.
+Ce projet analyse des images et vidéos en utilisant YOLOv8 pré-entraîné sur différents datasets avec PyTorch pour détecter, classifier et segmenter les objets selon les classes disponibles dans chaque dataset. Il inclut également la possibilité d'entraîner des modèles personnalisés avec Docker.
 
 ## 🚀 Installation
 
@@ -126,6 +126,8 @@ python analyze_video.py
 
 ## ⚙️ Configuration des datasets
 
+### Utilisation des modèles pré-entraînés
+
 Dans `analyze_image.py` et `analyze_video.py`, vous pouvez choisir le dataset à utiliser :
 
 ```python
@@ -150,13 +152,15 @@ model_paths = {
     's-oiv7': "yolov8s-oiv7.pt",      
     'm-oiv7': "yolov8m-oiv7.pt",      
     'l-oiv7': "yolov8l-oiv7.pt",      
-    'x-oiv7': "yolov8x-oiv7.pt",      
+    'x-oiv7': "yolov8x-oiv7.pt",  
+
+    # Modèles personnalisés
+    'custom-trained': "runs/train/weights/best.pt",   
 }
 
 # Choisir le dataset à utiliser
 dataset_choice = 'm-seg'  # Segmentation COCO Medium
 ```
-
 
 ### 🎯 Dataset COCO (Common Objects in Context)
 
@@ -255,6 +259,62 @@ def get_model(model_path):
 | Large  | yolov8l.pt | yolov8l-seg.pt | yolov8l-oiv7.pt | - | +++++ | Haute précision |
 | Huge   | yolov8x.pt | yolov8x-seg.pt | yolov8x-oiv7.pt | -- | +++++ | Recherche |
 
+## 🎓 Entraînement de Modèles Personnalisés
+
+### Prérequis
+- Docker Desktop installé
+- Dataset au format YOLO (images + labels)
+
+### Structure pour l'Entraînement
+```
+yolov8_object_detection/
+├── datasets/
+│   └── my_dataset/
+│       └── Aerial Cars.v2-aerial_cars.yolov8/
+│           ├── train/
+│           │   ├── images/
+│           │   └── labels/
+│           ├── valid/
+│           │   ├── images/
+│           │   └── labels/
+│           └── data.yaml
+├── runs/
+│   └── train/
+│       ├── weights/
+│       │   ├── best.pt      # Meilleur modèle
+│       │   └── last.pt      # Dernier modèle
+│       └── results.png      # Courbes d'entraînement
+├── Dockerfile               # Image Docker pour entraînement
+├── DOCKER_GUIDE.md          # Guide complet d'entraînement
+└── ...
+```
+
+### Entraînement avec Docker
+
+1. **Créer l'image Docker :**
+```bash
+docker build --platform=linux/arm64/v8 -t my-yolo-arm64 .
+```
+
+2. **Lancer l'entraînement :**
+```bash
+docker run --rm -it \
+  -v "$PWD":/workspace \
+  my-yolo-arm64 \
+  yolo train model=yolov8n.pt \
+       data="/workspace/datasets/my_dataset/data.yaml" \
+       epochs=50 imgsz=640 batch=8 workers=0 project=/workspace/runs
+```
+
+3. **Utiliser le modèle entraîné :**
+```python
+# Dans analyze_image.py ou analyze_video.py
+model_path = "custom-trained"
+```
+
+### Guide Complet
+Consultez `DOCKER_GUIDE.md` pour un guide détaillé sur l'entraînement de modèles personnalisés.
+
 ## 📁 Structure du projet
 
 ```
@@ -264,8 +324,10 @@ yolov8_object_detection/
 ├── install.sh               # Script d'installation automatique
 ├── analyze_image.py         # Script d'analyse d'images multi-datasets
 ├── analyze_video.py         # Script d'analyse de vidéos multi-datasets
-├── test.jpg                 # Image de test
-├── test.mp4                 # Vidéo de test (à ajouter)
+├── Dockerfile               # Image Docker pour entraînement
+├── DOCKER_GUIDE.md          # Guide d'entraînement avec Docker
+├── datasets/                # Datasets pour entraînement
+├── runs/                    # Résultats d'entraînement
 └── README.md                # Ce fichier
 
 ```
@@ -273,14 +335,16 @@ yolov8_object_detection/
 **Fichiers générés automatiquement :**
 - `venv/` - Environnement virtuel créé lors de l'installation
 - `yolov8*.pt` - Modèles YOLOv8 téléchargés automatiquement (~50-200MB chacun)
-
+- `runs/train/weights/` - Modèles entraînés personnalisés
 
 ## 📖 Ressources supplémentaires
 
 - [Documentation Ultralytics](https://docs.ultralytics.com/)
 - [Dataset COCO](https://cocodataset.org/)
 - [Dataset Open Images V7](https://storage.googleapis.com/openimages/web/index.html)
+- [Roboflow Universe](https://universe.roboflow.com/)
 - [YOLOv8 Paper](https://arxiv.org/abs/2305.09972)
+- [Docker Documentation](https://docs.docker.com/)
 
 ## 📄 Licence
 

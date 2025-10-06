@@ -41,6 +41,14 @@ DATASET_INFO = {
         'num_classes': 80,
         'website': 'https://cocodataset.org/',
         'description': 'Segmentation d\'objets avec masques de pixels précis'
+    },
+    'custom-trained': {
+        'name': 'Modèle personnalisé',
+        'full_name': 'Modèle personnalisé',
+        'classes': None,  # 4 classes
+        'num_classes': 4,
+        'website': 'https://github.com/ultralytics/ultralytics',
+        'description': 'Modèle YOLOv8 fine-tuné sur dataset Aerial Cars'
     }
 }
 
@@ -52,9 +60,11 @@ def detect_dataset_type(model_path):
         model_path (str): Chemin vers le modèle
         
     Returns:
-        str: Type de dataset ('coco', 'oiv7', 'seg')
+        str: Type de dataset ('coco', 'oiv7', 'seg', 'custom-trained')
     """
-    if 'seg' in model_path.lower():
+    if 'best.pt' in model_path or 'last.pt' in model_path:
+        return 'custom-trained'
+    elif 'seg' in model_path.lower():
         if model_path[6] == 'n':
             return 'n-seg'
         elif model_path[6] == 's':
@@ -87,6 +97,7 @@ def detect_dataset_type(model_path):
             return 'l-coco'
         elif model_path[6] == 'x':
             return 'x-coco'
+
 
 def get_model(model_path):
     """
@@ -123,7 +134,10 @@ def analyze_video(video_path, model_path, seuil_conf):
     
     # Détecter le type de dataset
     dataset_type = detect_dataset_type(model_path)
-    dataset_info = DATASET_INFO[dataset_type[2:]]
+    if dataset_type == 'custom-trained':
+        dataset_info = DATASET_INFO[dataset_type]
+    else:
+        dataset_info = DATASET_INFO[dataset_type[2:]]
     
     # Vérifier si la vidéo existe
     try:
@@ -359,6 +373,26 @@ def show_dataset_info(dataset_type):
     Args:
         dataset_type (str): Type de dataset ('coco', 'oiv7', 'seg')
     """
+
+    # Gestion du modèle personnalisé
+    if dataset_type == 'custom-trained':
+        print()
+        print(f"📊 INFORMATIONS MODÈLE PERSONNALISÉ")
+        print("=" * 50)
+        print(f"📚 Dataset: Modèle entraîné personnalisé")
+        print(f"🔢 Nombre de classes: 4")
+        print(f"🌐 Type: Détection de véhicules aériens")
+        print(f"📝 Description: Modèle YOLOv8 fine-tuné sur dataset Aerial Cars")
+        print()
+        print("🏷️ Classes détectées:")
+        print("   🚗 car")
+        print("   🚛 truck") 
+        print("   🚌 bus")
+        print("   🚐 van")
+        print()
+        return
+
+    # Gestion des datasets pré-entraînés
     dataset_info = DATASET_INFO[dataset_type[2:]]
     
     print()
@@ -397,10 +431,7 @@ def show_dataset_info(dataset_type):
     print()
 
 def main():
-    """Fonction principale"""
-    # Configuration - Changez ces valeurs pour tester différents datasets
-    video_path = "test.mp4"  
-    
+    """Fonction principale"""    
     # Exemples de modèles pour différents datasets :
     model_paths = {
         # Modèles de DÉTECTION
@@ -423,11 +454,17 @@ def main():
         'm-oiv7': "yolov8m-oiv7.pt",      
         'l-oiv7': "yolov8l-oiv7.pt",      
         'x-oiv7': "yolov8x-oiv7.pt",      
+
+        # Modèles personnalisés
+        'custom-trained': "runs/train/weights/best.pt",
     }
     
     # Choisir le dataset à utiliser
-    dataset_choice = 'n-seg' 
+    dataset_choice = 'x-oiv7' 
     model_path = model_paths[dataset_choice]
+
+    # Configuration - Changez ces valeurs pour tester différents datasets
+    video_path = "Videos/video.mp4"
 
     # Choisir le seuil de confiance
     seuil_conf = 0.25

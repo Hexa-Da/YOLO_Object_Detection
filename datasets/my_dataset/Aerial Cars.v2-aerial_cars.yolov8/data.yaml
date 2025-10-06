@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 4
+names: ['car','truck','bus','van']
+
+roboflow:
+  workspace: aerialcars-fyayu
+  project: aerial-cars-4o4mj
+  version: 2
+  license: Public Domain
+  url: https://universe.roboflow.com/aerialcars-fyayu/aerial-cars-4o4mj/dataset/2
