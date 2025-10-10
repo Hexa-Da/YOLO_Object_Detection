@@ -456,18 +456,18 @@ def main():
         'x-oiv7': "yolov8x-oiv7.pt",      
 
         # Modèles personnalisés
-        'custom-trained': "runs/train/weights/best.pt",
+        'custom-trained': "runs/train4/weights/best.pt",
     }
     
     # Choisir le dataset à utiliser
-    dataset_choice = 'x-oiv7' 
+    dataset_choice = 'custom-trained' 
     model_path = model_paths[dataset_choice]
 
     # Configuration - Changez ces valeurs pour tester différents datasets
-    video_path = "Videos/video.mp4"
+    video_path = "Videos/video2.mp4"
 
     # Choisir le seuil de confiance
-    seuil_conf = 0.25
+    seuil_conf = 0.8
     
     # Afficher les informations sur le dataset
     show_dataset_info(dataset_choice)

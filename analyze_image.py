@@ -269,6 +269,7 @@ def analyze_image(image_path, model_path, seuil_conf):
         
         # Afficher la figure
         plt.tight_layout()
+        plt.savefig("output.png")
         plt.show()
         
     else:
@@ -376,18 +377,18 @@ def main():
         'x-oiv7': "yolov8x-oiv7.pt",  
 
         # Modèles personnalisés
-        'custom-trained': "runs/train/weights/best.pt",
+        'custom-trained': "runs/train2/weights/best.pt",
     }
     
     # Choisir le dataset à utiliser
-    dataset_choice = 'x-coco' 
+    dataset_choice = 'custom-trained' 
     model_path = model_paths[dataset_choice]
 
     # Configuration - Changez ces valeurs pour tester différents datasets
     image_path = "Images/image.png"
 
     # Choisir le seuil de confiance
-    seuil_conf = 0.25
+    seuil_conf = 0.8
     
     # Afficher les informations sur le dataset
     show_dataset_info(dataset_choice)

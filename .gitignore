@@ -1,3 +1,7 @@
+venv/
+
+runs/
+
 yolov8l.pt
 yolov8m.pt
 yolov8n.pt
