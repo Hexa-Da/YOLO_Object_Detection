@@ -377,7 +377,7 @@ def main():
         'x-oiv7': "yolov8x-oiv7.pt",  
 
         # Modèles personnalisés
-        'custom-trained': "runs/train2/weights/best.pt",
+        'custom-trained': "runs/train6/weights/best.pt",
     }
     
     # Choisir le dataset à utiliser

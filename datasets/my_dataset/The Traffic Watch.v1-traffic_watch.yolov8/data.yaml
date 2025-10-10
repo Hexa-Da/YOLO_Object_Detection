@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 14
+names: ['bicycle', 'bus', 'car', 'cyclist', 'lorry', 'minibus', 'minivan', 'motorcycle', 'motorcyclist', 'pedestrian', 'person', 'road-signs', 'road-vendor', 'traffic-lights']
+
+roboflow:
+  workspace: aerialcars-fyayu
+  project: the-traffic-watch-aplpr
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/aerialcars-fyayu/the-traffic-watch-aplpr/dataset/1
