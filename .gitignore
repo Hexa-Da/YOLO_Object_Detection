@@ -20,6 +20,12 @@ yolov8n-seg.pt
 yolov8s-seg.pt
 yolov8x-seg.pt
 
+yolo11l.pt
+yolo11m.pt
+yolo11n.pt
+yolo11s.pt
+yolo11x.pt
+
 __pycache__/
 *.pyc
 *.pyo

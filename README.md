@@ -41,7 +41,7 @@ pip install -r requirements.txt
 ```
 
 **Dépendances installées :**
-- `ultralytics>=8.0.0` - Framework YOLOv8
+- `ultralytics>=8.0.0` - Framework YOLOv8 (8.3.209 pour YOLOv11)
 - `torch>=1.9.0` - PyTorch pour le deep learning
 - `torchvision>=0.10.0` - Vision utilities
 - `opencv-python>=4.5.0` - Traitement d'images
@@ -156,6 +156,13 @@ model_paths = {
 
     # Modèles personnalisés
     'custom-trained': "runs/train/weights/best.pt",   
+
+    # Modèles YOLOv11
+    'nv11-coco': "yolo11n.pt",
+    'sv11-coco': "yolo11s.pt",
+    'mv11-coco': "yolo11m.pt",
+    'lv11-coco': "yolo11l.pt",
+    'xv11-coco': "yolo11x.pt",
 }
 
 # Choisir le dataset à utiliser
@@ -259,6 +266,19 @@ def get_model(model_path):
 | Large  | yolov8l.pt | yolov8l-seg.pt | yolov8l-oiv7.pt | - | +++++ | Haute précision |
 | Huge   | yolov8x.pt | yolov8x-seg.pt | yolov8x-oiv7.pt | -- | +++++ | Recherche |
 
+### YOLOv8 vs YOLOv11
+
+| Caractéristique | YOLOv8 | YOLOv11 |
+|----------------|---------|----------|
+| **Année** | 2023 | 2024 |
+| **mAP COCO** | 53.9% (m) | 54.7% (m) |
+| **Vitesse** | Référence | Légèrement plus lent |
+| **Précision** | Excellente | Améliorée (+0.8%) |
+| **Architecture** | C2f backbone | C3k2 + C2PSA |
+| **Paramètres** | Plus léger | Légèrement plus lourd |
+| **Usage recommandé** | Production | Haute précision |
+
+
 ## 🎓 Entraînement de Modèles Personnalisés
 
 ### Prérequis
@@ -270,7 +290,7 @@ def get_model(model_path):
 yolov8_object_detection/
 ├── datasets/
 │   └── my_dataset/
-│       └── Aerial Cars.v2-aerial_cars.yolov8/
+│       └── Nom_du_dataset.yolov8/
 │           ├── train/
 │           │   ├── images/
 │           │   └── labels/
@@ -291,9 +311,11 @@ yolov8_object_detection/
 
 ### Entraînement avec Docker
 
+#### Sur Mac (ARM64)
+
 1. **Créer l'image Docker :**
 ```bash
-docker build --platform=linux/arm64/v8 -t my-yolo-arm64 .
+docker build -f Dockerfile.arm64 -t my-yolo-arm64 .
 ```
 
 2. **Lancer l'entraînement :**
@@ -304,6 +326,40 @@ docker run --rm -it \
   yolo train model=yolov8n.pt \
        data="/workspace/datasets/my_dataset/data.yaml" \
        epochs=50 imgsz=640 batch=8 workers=0 project=/workspace/runs
+```
+
+#### Sur PC Linux/Windows (AMD64)
+
+1. **Créer l'image Docker :**
+```bash
+docker build -f Dockerfile.amd64 -t my-yolo-amd64 .
+```
+
+2. **Lancer l'entraînement :**
+```bash
+docker run --rm -it \
+  -v "$PWD":/workspace \
+  my-yolo-amd64 \
+  yolo train model=yolov8x.pt \
+       data="/workspace/datasets/my_dataset/data.yaml" \
+       epochs=100 imgsz=640 batch=16 workers=4 project=/workspace/runs
+```
+
+#### Sur PC avec GPU (AMD64)
+
+1. **Créer l'image Docker :**
+```bash
+docker build -f Dockerfile.gpu -t my-yolo-gpu . 
+```
+
+2. **Lancer l'entraînement :**
+```bash
+docker run --rm -it --gpus all \
+  -v "$PWD":/workspace \
+  my-yolo-gpu \
+  yolo train model=yolov8x.pt \
+       data="/workspace/datasets/my_dataset/data.yaml" \
+       epochs=500 imgsz=640 batch=32 device=0 project=/workspace/runs
 ```
 
 3. **Utiliser le modèle entraîné :**
@@ -324,10 +380,14 @@ yolov8_object_detection/
 ├── install.sh               # Script d'installation automatique
 ├── analyze_image.py         # Script d'analyse d'images multi-datasets
 ├── analyze_video.py         # Script d'analyse de vidéos multi-datasets
-├── Dockerfile               # Image Docker pour entraînement
+├── Dockerfile.arm64         # Image Docker pour Mac Apple Silicon
+├── Dockerfile.amd64         # Image Docker pour PC (CPU)
+├── Dockerfile.gpu           # Image Docker pour PC avec GPU NVIDIA
 ├── DOCKER_GUIDE.md          # Guide d'entraînement avec Docker
 ├── datasets/                # Datasets pour entraînement
 ├── runs/                    # Résultats d'entraînement
+├── Images/                  # Images de test
+├── Videos/                  # Video de test
 └── README.md                # Ce fichier
 
 ```
@@ -335,6 +395,7 @@ yolov8_object_detection/
 **Fichiers générés automatiquement :**
 - `venv/` - Environnement virtuel créé lors de l'installation
 - `yolov8*.pt` - Modèles YOLOv8 téléchargés automatiquement (~50-200MB chacun)
+- `output.png` - sauvegarde de l'image analysée 
 - `runs/train/weights/` - Modèles entraînés personnalisés
 
 ## 📖 Ressources supplémentaires

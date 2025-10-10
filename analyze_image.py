@@ -60,9 +60,20 @@ def detect_dataset_type(model_path):
     Returns:
         str: Type de dataset ('coco', 'oiv7', 'seg', 'custom-trained')
     """
-    if 'best.pt' in model_path or 'last.pt' in model_path:
+    if 'best.pt' in model_path:
         return 'custom-trained'
-    elif 'seg' in model_path.lower():
+    elif '11' in model_path:
+        if model_path[6] == 'n':
+            return 'nv11-coco'
+        elif model_path[6] == 's':
+            return 'sv11-coco'
+        elif model_path[6] == 'm':
+            return 'mv11-coco'
+        elif model_path[6] == 'l':
+            return 'lv11-coco'
+        elif model_path[6] == 'x':
+            return 'xv11-coco'
+    elif 'seg' in model_path:
         if model_path[6] == 'n':
             return 'n-seg'
         elif model_path[6] == 's':
@@ -73,7 +84,7 @@ def detect_dataset_type(model_path):
             return 'l-seg'
         elif model_path[6] == 'x':
             return 'x-seg'
-    elif 'oiv7' in model_path.lower():
+    elif 'oiv7' in model_path:
         if model_path[6] == 'n':
             return 'n-oiv7'
         elif model_path[6] == 's':
@@ -133,7 +144,7 @@ def analyze_image(image_path, model_path, seuil_conf):
     if dataset_type == 'custom-trained':
         dataset_info = DATASET_INFO[dataset_type]
     else:
-        dataset_info = DATASET_INFO[dataset_type[2:]]
+        dataset_info = DATASET_INFO[dataset_type.split('-')[1]]
     
     # Vérifier si l'image existe
     try:
@@ -284,6 +295,7 @@ def analyze_image(image_path, model_path, seuil_conf):
         plt.axis('off')
         plt.show()
     
+    print(f"🔍 Résultats sauvegardés dans le fichier output.png")
     print(f"\n🏁 Analyse terminée!")
     print()
 
@@ -314,7 +326,7 @@ def show_dataset_info(dataset_type):
         return
     
     # Gestion des datasets pré-entraînés
-    dataset_info = DATASET_INFO[dataset_type[2:]]
+    dataset_info = DATASET_INFO[dataset_type.split('-')[1]]
     
     print()
     print(f"📊 INFORMATIONS DATASET {dataset_info['name'].upper()}")
@@ -378,17 +390,24 @@ def main():
 
         # Modèles personnalisés
         'custom-trained': "runs/train6/weights/best.pt",
+
+        # Modèles YOLOv11
+        'nv11-coco': "yolo11n.pt",
+        'sv11-coco': "yolo11s.pt",
+        'mv11-coco': "yolo11m.pt",
+        'lv11-coco': "yolo11l.pt",
+        'xv11-coco': "yolo11x.pt",
     }
     
     # Choisir le dataset à utiliser
-    dataset_choice = 'custom-trained' 
+    dataset_choice = 'xv11-coco' 
     model_path = model_paths[dataset_choice]
 
     # Configuration - Changez ces valeurs pour tester différents datasets
-    image_path = "Images/image.png"
+    image_path = "Images/test.jpg"
 
     # Choisir le seuil de confiance
-    seuil_conf = 0.8
+    seuil_conf = 0.75
     
     # Afficher les informations sur le dataset
     show_dataset_info(dataset_choice)
