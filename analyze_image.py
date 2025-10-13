@@ -40,13 +40,21 @@ DATASET_INFO = {
         'website': 'https://cocodataset.org/',
         'description': 'Segmentation d\'objets avec masques de pixels précis'
     },
-    'custom-trained': {
+    'custom-trained-aerial-cars': {
         'name': 'Modèle personnalisé',
         'full_name': 'Modèle personnalisé',
         'classes': None,  # 4 classes
         'num_classes': 4,
         'website': 'https://github.com/ultralytics/ultralytics',
         'description': 'Modèle YOLOv8 fine-tuné sur dataset Aerial Cars'
+    },
+    'custom-trained-traffic-watch': {
+        'name': 'Modèle personnalisé',
+        'full_name': 'Modèle personnalisé',
+        'classes': None,  # 14 classes
+        'num_classes': 14,
+        'website': 'https://github.com/ultralytics/ultralytics',
+        'description': 'Modèle YOLOv8 fine-tuné sur dataset Traffic Watch'
     }
 }
 
@@ -58,10 +66,12 @@ def detect_dataset_type(model_path):
         model_path (str): Chemin vers le modèle
         
     Returns:
-        str: Type de dataset ('coco', 'oiv7', 'seg', 'custom-trained')
+        str: Type de dataset ('coco', 'oiv7', 'seg', 'custom-trained-aerial-cars', 'custom-trained-traffic-watch')
     """
-    if 'best.pt' in model_path:
-        return 'custom-trained'
+    if 'aerial-cars' in model_path:
+        return 'custom-trained-aerial-cars'
+    elif 'traffic-watch' in model_path:
+        return 'custom-trained-traffic-watch'
     elif '11' in model_path:
         if model_path[6] == 'n':
             return 'nv11-coco'
@@ -141,7 +151,7 @@ def analyze_image(image_path, model_path, seuil_conf):
     
     # Détecter le type de dataset
     dataset_type = detect_dataset_type(model_path)
-    if dataset_type == 'custom-trained':
+    if 'custom-trained' in dataset_type:
         dataset_info = DATASET_INFO[dataset_type]
     else:
         dataset_info = DATASET_INFO[dataset_type.split('-')[1]]
@@ -308,7 +318,7 @@ def show_dataset_info(dataset_type):
     """
 
     # Gestion du modèle personnalisé
-    if dataset_type == 'custom-trained':
+    if dataset_type == 'custom-trained-aerial-cars':
         print()
         print(f"📊 INFORMATIONS MODÈLE PERSONNALISÉ")
         print("=" * 50)
@@ -325,6 +335,23 @@ def show_dataset_info(dataset_type):
         print()
         return
     
+    if dataset_type == 'custom-trained-traffic-watch':
+        print()
+        print(f"📊 INFORMATIONS MODÈLE PERSONNALISÉ")
+        print("=" * 50)
+        print(f"📚 Dataset: Modèle entraîné personnalisé")
+        print(f"🔢 Nombre de classes: 14")
+        print(f"🌐 Type: Détection de véhicules terrestres")
+        print(f"📝 Description: Modèle YOLOv8 fine-tuné sur dataset Traffic Watch")
+        print()
+        print("🏷️ Classes détectées:")
+        print("   🚗 car")
+        print("   🚛 truck") 
+        print("   🚌 bus")
+        print("   🚐 van")
+        print()
+        return
+
     # Gestion des datasets pré-entraînés
     dataset_info = DATASET_INFO[dataset_type.split('-')[1]]
     
@@ -389,7 +416,8 @@ def main():
         'x-oiv7': "yolov8x-oiv7.pt",  
 
         # Modèles personnalisés
-        'custom-trained': "runs/train6/weights/best.pt",
+        'custom-trained-aerial-cars': "runs/train6/weights/best.pt",
+        'custom-trained-traffic-watch': "runs/train12/weights/best.pt",
 
         # Modèles YOLOv11
         'nv11-coco': "yolo11n.pt",

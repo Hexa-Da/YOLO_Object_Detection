@@ -73,7 +73,7 @@ CMD ["/bin/bash"]
 
 **Construction :**
 ```bash
-docker build -f Dockerfile.arm64 -t my-yolo-arm64 .
+docker build --platform=linux/arm64 -f Dockerfile.arm64 -t username/my-yolo:arm64 .
 ```
 
 ### 2️⃣ Dockerfile.amd64 (PC Intel/AMD - CPU uniquement)
@@ -100,7 +100,7 @@ CMD ["/bin/bash"]
 
 **Construction :**
 ```bash
-docker build -f Dockerfile.amd64 -t my-yolo-amd64 .
+docker build --platform=linux/amd64 -f Dockerfile.amd64 -t username/my-yolo:amd64 .
 ```
 
 ### 3️⃣ Dockerfile.gpu (PC avec GPU NVIDIA)
@@ -127,7 +127,7 @@ CMD ["/bin/bash"]
 
 **Construction :**
 ```bash
-docker build -f Dockerfile.gpu -t my-yolo-gpu .
+docker build --platform=linux/amd64 -f Dockerfile.gpu -t username/my-yolo:gpu .
 ```
 
 ## Déploiement sur Autre Machine
@@ -137,15 +137,12 @@ docker build -f Dockerfile.gpu -t my-yolo-gpu .
 **1. Pousser l'image :**
 ```bash
 # Pour ARM64
-docker tag my-yolo-arm64 username/my-yolo:arm64
 docker push username/my-yolo:arm64
 
 # Pour AMD64 CPU
-docker tag my-yolo-amd64 username/my-yolo:amd64
 docker push username/my-yolo:amd64
 
 # Pour AMD64 GPU
-docker tag my-yolo-gpu username/my-yolo:gpu
 docker push username/my-yolo:gpu
 ```
 
@@ -168,7 +165,7 @@ docker pull username/my-yolo:gpu
 ```bash
 docker run --rm -it \
   -v "$PWD":/workspace \
-  my-yolo-arm64 \
+  username/my-yolo:arm64 \
   yolo train model=yolov8n.pt \
        data="/workspace/datasets/my_dataset/data.yaml" \
        epochs=50 imgsz=640 batch=8 workers=0 project=/workspace/runs
@@ -179,7 +176,7 @@ docker run --rm -it \
 ```bash
 docker run --rm -it \
   -v "$PWD":/workspace \
-  my-yolo-amd64 \
+  username/my-yolo:amd64 \
   yolo train model=yolo11m.pt \
        data="/workspace/datasets/my_dataset/data.yaml" \
        epochs=100 imgsz=640 batch=16 workers=4 project=/workspace/runs
@@ -190,7 +187,7 @@ docker run --rm -it \
 ```bash
 docker run --rm -it --gpus all \
   -v "$PWD":/workspace \
-  my-yolo-gpu \
+  username/my-yolo:gpu \
   yolo train model=yolov8x.pt \
        data="/workspace/datasets/my_dataset/data.yaml" \
        epochs=500 imgsz=1024 batch=32 device=0 project=/workspace/runs
