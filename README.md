@@ -8,7 +8,7 @@ Ce projet analyse des images et vidéos en utilisant YOLOv8 pré-entraîné sur 
 
 ```bash
 # 1. Aller dans le dossier du projet
-cd yolov8_object_detection
+cd YOLO_Object_Detection
 
 # 2. Exécuter le script d'installation
 chmod +x install.sh
@@ -72,7 +72,7 @@ error: externally-managed-environment
 **Important :** Vous devez activer l'environnement virtuel à chaque nouvelle session terminal :
 
 ```bash
-cd yolov8_object_detection
+cd YOLO_Object_Detection
 source venv/bin/activate
 ```
 
@@ -287,7 +287,7 @@ def get_model(model_path):
 
 ### Structure pour l'Entraînement
 ```
-yolov8_object_detection/
+YOLO_Object_Detection/
 ├── datasets/
 │   └── my_dataset/
 │       └── Nom_du_dataset.yolov8/
@@ -357,7 +357,7 @@ docker build -f Dockerfile.gpu -t my-yolo-gpu .
 docker run --rm -it --gpus all \
   -v "$PWD":/workspace \
   my-yolo-gpu \
-  yolo train model=yolov8x.pt \
+  yolo train model=yolov8x-seg.pt \
        data="/workspace/datasets/my_dataset/data.yaml" \
        epochs=500 imgsz=640 batch=32 device=0 project=/workspace/runs
 ```
@@ -374,7 +374,7 @@ Consultez `DOCKER_GUIDE.md` pour un guide détaillé sur l'entraînement de mod�
 ## 📁 Structure du projet
 
 ```
-yolov8_object_detection/
+YOLO_Object_Detection/
 ├── venv/                    # Environnement virtuel Python
 ├── requirements.txt         # Dépendances Python
 ├── install.sh               # Script d'installation automatique

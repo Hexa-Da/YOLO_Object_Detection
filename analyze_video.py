@@ -70,9 +70,9 @@ def detect_dataset_type(model_path):
     Returns:
         str: Type de dataset ('coco', 'oiv7', 'seg', 'custom-trained-aerial-cars', 'custom-trained-traffic-watch')
     """
-    if 'aerial-cars' in model_path:
+    if 'train6' in model_path:
         return 'custom-trained-aerial-cars'
-    elif 'traffic-watch' in model_path:
+    elif 'train12' in model_path:
         return 'custom-trained-traffic-watch'
     elif '11' in model_path:
         if model_path[6] == 'n':
@@ -392,11 +392,11 @@ def show_dataset_info(dataset_type):
     Affiche les informations sur le dataset utilisé
     
     Args:
-        dataset_type (str): Type de dataset ('coco', 'oiv7', 'seg')
+        dataset_type (str): Type de dataset ('coco', 'oiv7', 'seg', 'custom-trained-aerial-cars', 'custom-trained-traffic-watch')
     """
 
     # Gestion du modèle personnalisé
-    if dataset_type == 'custom-trained-aerial-cars':
+    if 'custom-trained-aerial-cars' in dataset_type:
         print()
         print(f"📊 INFORMATIONS MODÈLE PERSONNALISÉ")
         print("=" * 50)
@@ -413,7 +413,7 @@ def show_dataset_info(dataset_type):
         print()
         return
 
-    if dataset_type == 'custom-trained-traffic-watch':
+    if 'custom-trained-traffic-watch' in dataset_type:
         print()
         print(f"📊 INFORMATIONS MODÈLE PERSONNALISÉ")
         print("=" * 50)
@@ -423,10 +423,20 @@ def show_dataset_info(dataset_type):
         print(f"📝 Description: Modèle YOLOv8 fine-tuné sur dataset Traffic Watch")
         print()
         print("🏷️ Classes détectées:")
-        print("   🚗 car")
-        print("   🚛 truck") 
-        print("   🚌 bus")
-        print("   🚐 van")
+        print("    car")
+        print("    pedestrian")
+        print("    motorcyclist")
+        print("    traffic-lights")
+        print("    bus")
+        print("    minivan")
+        print("    lorry")
+        print("    person")
+        print("    motorcycle")
+        print("    cyclist")
+        print("    road-signs")
+        print("    bicycle")
+        print("    minibus")
+        print("    road-vendor")
         print()
         return
 
