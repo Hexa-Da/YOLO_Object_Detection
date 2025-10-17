@@ -1,0 +1,5 @@
+runs/train6/weights/best.pt filter=lfs diff=lfs merge=lfs -text
+
+runs/train12/weights/best.pt filter=lfs diff=lfs merge=lfs -text
+
+runs/train19/weights/best.pt filter=lfs diff=lfs merge=lfs -text

@@ -70,7 +70,7 @@ def detect_dataset_type(model_path):
     """
     if 'train6' in model_path:
         return 'custom-trained-aerial-cars'
-    elif 'train12' in model_path:
+    elif 'train1' in model_path:
         return 'custom-trained-traffic-watch'
     elif '11' in model_path:
         if model_path[6] == 'n':
@@ -427,7 +427,7 @@ def main():
 
         # Modèles personnalisés
         'custom-trained-aerial-cars': "runs/train6/weights/best.pt",
-        'custom-trained-traffic-watch': "runs/train12/weights/best.pt",
+        'custom-trained-traffic-watch': "runs/train19/weights/best.pt",
 
         # Modèles YOLOv11
         'nv11-coco': "yolo11n.pt",
@@ -445,7 +445,7 @@ def main():
     image_path = "Images/test4.jpg"
 
     # Choisir le seuil de confiance
-    seuil_conf = 0.5
+    seuil_conf = 0.75
     
     # Afficher les informations sur le dataset
     show_dataset_info(dataset_choice)

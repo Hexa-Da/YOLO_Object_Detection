@@ -72,7 +72,7 @@ def detect_dataset_type(model_path):
     """
     if 'train6' in model_path:
         return 'custom-trained-aerial-cars'
-    elif 'train12' in model_path:
+    elif 'train1' in model_path:
         return 'custom-trained-traffic-watch'
     elif '11' in model_path:
         if model_path[6] == 'n':
@@ -232,10 +232,13 @@ def analyze_video(video_path, model_path, seuil_conf):
                 
                 # Compter les détections
                 frame_detections = 0
-                if result.boxes is not None and result.masks is None:
+                if result.boxes is not None:
                     frame_detections = len(result.boxes)
                     total_detections += frame_detections
-                
+                elif result.masks is not None:
+                    frame_detections = len(result.maskss)
+                    total_detections += frame_detections
+
                 detection_history.append(frame_detections)
                 
                 # Dessiner les détections sur la frame
@@ -523,7 +526,7 @@ def main():
     video_path = "Videos/video.mp4"
 
     # Choisir le seuil de confiance
-    seuil_conf = 0.5
+    seuil_conf = 0.75
     
     # Afficher les informations sur le dataset
     show_dataset_info(dataset_choice)
